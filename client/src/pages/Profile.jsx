@@ -8,12 +8,12 @@ import {
   FiUser,
   FiMail,
   FiPhone,
+  FiMapPin,
+  FiEdit3,
   FiCamera,
   FiLock,
-  FiMapPin,
-  FiPlus,
-  FiEdit2,
   FiTrash2,
+  FiPlus,
   FiCheck,
 } from "react-icons/fi";
 import { useAuth } from "../context/AuthContext";
@@ -22,68 +22,68 @@ import { authAPI } from "../api/auth";
 import Button from "../components/common/Button";
 import Input from "../components/common/Input";
 import Modal from "../components/common/Modal";
-import Card from "../components/common/Card";
 import Loader from "../components/common/Loader";
 
 const Profile = () => {
   const { user, updateUser } = useAuth();
   const [activeTab, setActiveTab] = useState("profile");
-  const [addresses, setAddresses] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [addresses, setAddresses] = useState([]);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
-  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [editingAddress, setEditingAddress] = useState(null);
-  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   const {
-    register,
-    handleSubmit,
-    formState: { errors, isDirty },
-    reset,
-  } = useForm({
-    defaultValues: {
-      firstName: user?.firstName || "",
-      lastName: user?.lastName || "",
-      email: user?.email || "",
-      phone: user?.phone || "",
-    },
-  });
+    register: registerProfile,
+    handleSubmit: handleProfileSubmit,
+    reset: resetProfile,
+    formState: { errors: profileErrors, isDirty: isProfileDirty },
+  } = useForm();
 
   const {
     register: registerAddress,
     handleSubmit: handleAddressSubmit,
-    formState: { errors: addressErrors },
     reset: resetAddress,
+    formState: { errors: addressErrors },
   } = useForm();
 
   const {
     register: registerPassword,
     handleSubmit: handlePasswordSubmit,
-    formState: { errors: passwordErrors },
     reset: resetPassword,
     watch,
+    formState: { errors: passwordErrors },
   } = useForm();
 
+  const newPassword = watch("newPassword");
+
   useEffect(() => {
+    if (user) {
+      resetProfile({
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phone: user.phone || "",
+      });
+    }
     fetchAddresses();
-  }, []);
+  }, [user, resetProfile]);
 
   const fetchAddresses = async () => {
     try {
       const { data } = await userAPI.getAddresses();
       setAddresses(data.data || []);
     } catch (error) {
-      console.error("Error fetching addresses:", error);
+      console.error("Failed to fetch addresses:", error);
     }
   };
 
-  const onProfileSubmit = async (formData) => {
+  const onProfileSubmit = async (data) => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-      const { data } = await userAPI.updateProfile(formData);
-      updateUser(data.data);
-      toast.success("Profile updated successfully");
-      reset(formData);
+      const { data: response } = await userAPI.updateProfile(data);
+      updateUser(response.data);
+      toast.success("Profile updated successfully!");
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to update profile");
     } finally {
@@ -95,35 +95,26 @@ const Profile = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error("Image size should be less than 2MB");
-      return;
-    }
-
     const formData = new FormData();
     formData.append("avatar", file);
 
     try {
-      setIsUploadingAvatar(true);
       const { data } = await userAPI.updateAvatar(formData);
       updateUser({ avatar: data.data.avatar });
-      toast.success("Avatar updated successfully");
+      toast.success("Avatar updated successfully!");
     } catch (error) {
-      toast.error("Failed to upload avatar");
-    } finally {
-      setIsUploadingAvatar(false);
+      toast.error("Failed to update avatar");
     }
   };
 
-  const onAddressSubmit = async (formData) => {
+  const onAddressSubmit = async (data) => {
     try {
-      setIsLoading(true);
       if (editingAddress) {
-        await userAPI.updateAddress(editingAddress._id, formData);
-        toast.success("Address updated successfully");
+        await userAPI.updateAddress(editingAddress._id, data);
+        toast.success("Address updated successfully!");
       } else {
-        await userAPI.addAddress(formData);
-        toast.success("Address added successfully");
+        await userAPI.addAddress(data);
+        toast.success("Address added successfully!");
       }
       fetchAddresses();
       setIsAddressModalOpen(false);
@@ -131,8 +122,6 @@ const Profile = () => {
       resetAddress();
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to save address");
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -141,40 +130,52 @@ const Profile = () => {
 
     try {
       await userAPI.deleteAddress(addressId);
-      toast.success("Address deleted successfully");
+      toast.success("Address deleted successfully!");
       fetchAddresses();
     } catch (error) {
       toast.error("Failed to delete address");
     }
   };
 
-  const handleSetDefaultAddress = async (addressId) => {
+  const handleSetDefault = async (addressId) => {
     try {
       await userAPI.setDefaultAddress(addressId);
-      toast.success("Default address updated");
+      toast.success("Default address updated!");
       fetchAddresses();
     } catch (error) {
-      toast.error("Failed to update default address");
+      toast.error("Failed to set default address");
     }
   };
 
-  const onPasswordSubmit = async (formData) => {
+  const onPasswordSubmit = async (data) => {
     try {
-      setIsLoading(true);
-      await authAPI.updatePassword(formData);
-      toast.success("Password updated successfully");
+      await authAPI.updatePassword(data);
+      toast.success("Password updated successfully!");
       setIsPasswordModalOpen(false);
       resetPassword();
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to update password");
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const openEditAddress = (address) => {
+  const openAddressModal = (address = null) => {
     setEditingAddress(address);
-    resetAddress(address);
+    if (address) {
+      resetAddress(address);
+    } else {
+      resetAddress({
+        type: "home",
+        firstName: user?.firstName || "",
+        lastName: user?.lastName || "",
+        street: "",
+        apartment: "",
+        city: "",
+        state: "",
+        zipCode: "",
+        country: "India",
+        phone: user?.phone || "",
+      });
+    }
     setIsAddressModalOpen(true);
   };
 
@@ -187,165 +188,144 @@ const Profile = () => {
   return (
     <>
       <Helmet>
-        <title>My Profile | DehydratedFoods</title>
+        <title>My Profile - DehydratedFoods</title>
       </Helmet>
 
-      <div className="bg-gray-50 min-h-screen py-8">
+      <div className="section bg-gray-50">
         <div className="container-custom">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">My Profile</h1>
-
-          <div className="grid lg:grid-cols-4 gap-8">
-            {/* Sidebar */}
-            <div className="lg:col-span-1">
-              <Card className="sticky top-24">
-                {/* Avatar Section */}
-                <div className="text-center pb-6 border-b border-gray-100">
-                  <div className="relative inline-block">
-                    <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-100 mx-auto">
-                      {user?.avatar ? (
-                        <img
-                          src={user.avatar}
-                          alt={user.firstName}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-primary-100 flex items-center justify-center">
-                          <span className="text-3xl font-bold text-primary-600">
-                            {user?.firstName?.charAt(0)}
-                            {user?.lastName?.charAt(0)}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <label className="absolute bottom-0 right-0 w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-primary-700 transition-colors">
-                      <FiCamera className="text-white" size={16} />
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleAvatarChange}
-                        disabled={isUploadingAvatar}
+          <div className="max-w-4xl mx-auto">
+            {/* Header */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-gradient-hero text-white rounded-2xl p-8 mb-8"
+            >
+              <div className="flex flex-col md:flex-row items-center gap-6">
+                {/* Avatar */}
+                <div className="relative">
+                  <div className="w-24 h-24 rounded-full bg-white/20 overflow-hidden">
+                    {user?.avatar ? (
+                      <img
+                        src={user.avatar}
+                        alt={user.firstName}
+                        className="w-full h-full object-cover"
                       />
-                    </label>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-3xl font-bold">
+                        {user?.firstName?.charAt(0)}
+                        {user?.lastName?.charAt(0)}
+                      </div>
+                    )}
                   </div>
-                  <h3 className="mt-4 font-semibold text-gray-900">
-                    {user?.firstName} {user?.lastName}
-                  </h3>
-                  <p className="text-sm text-gray-500">{user?.email}</p>
+                  <label className="absolute bottom-0 right-0 w-8 h-8 bg-white rounded-full flex items-center justify-center cursor-pointer shadow-lg hover:bg-gray-50 transition-colors">
+                    <FiCamera className="text-gray-600" size={16} />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleAvatarChange}
+                    />
+                  </label>
                 </div>
 
-                {/* Navigation */}
-                <nav className="pt-4 space-y-1">
-                  {tabs.map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(tab.id)}
-                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                        activeTab === tab.id
-                          ? "bg-primary-50 text-primary-600"
-                          : "text-gray-600 hover:bg-gray-50"
-                      }`}
-                    >
-                      <tab.icon size={20} />
-                      <span className="font-medium">{tab.label}</span>
-                    </button>
-                  ))}
-                </nav>
-              </Card>
-            </div>
+                <div className="text-center md:text-left">
+                  <h1 className="text-2xl font-bold mb-1">
+                    {user?.firstName} {user?.lastName}
+                  </h1>
+                  <p className="text-white/80">{user?.email}</p>
+                  <p className="text-white/60 text-sm mt-1">
+                    Member since{" "}
+                    {new Date(user?.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+            </motion.div>
 
-            {/* Main Content */}
-            <div className="lg:col-span-3">
-              {/* Profile Tab */}
-              {activeTab === "profile" && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  <Card>
-                    <h2 className="text-xl font-semibold text-gray-900 mb-6">
-                      Personal Information
-                    </h2>
-                    <form
-                      onSubmit={handleSubmit(onProfileSubmit)}
-                      className="space-y-6"
-                    >
-                      <div className="grid md:grid-cols-2 gap-6">
-                        <Input
-                          label="First Name"
-                          {...register("firstName", {
-                            required: "First name is required",
-                          })}
-                          error={errors.firstName?.message}
-                          leftIcon={<FiUser size={18} />}
-                        />
-                        <Input
-                          label="Last Name"
-                          {...register("lastName", {
-                            required: "Last name is required",
-                          })}
-                          error={errors.lastName?.message}
-                          leftIcon={<FiUser size={18} />}
-                        />
-                      </div>
+            {/* Tabs */}
+            <div className="bg-white rounded-2xl shadow-card overflow-hidden">
+              <div className="flex border-b">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex-1 flex items-center justify-center gap-2 px-6 py-4 font-medium transition-colors ${
+                      activeTab === tab.id
+                        ? "text-primary-600 border-b-2 border-primary-600 bg-primary-50"
+                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                    }`}
+                  >
+                    <tab.icon size={18} />
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
 
+              <div className="p-6">
+                {/* Profile Tab */}
+                {activeTab === "profile" && (
+                  <motion.form
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    onSubmit={handleProfileSubmit(onProfileSubmit)}
+                    className="space-y-6"
+                  >
+                    <div className="grid md:grid-cols-2 gap-6">
                       <Input
-                        label="Email Address"
-                        type="email"
-                        {...register("email")}
-                        disabled
-                        leftIcon={<FiMail size={18} />}
-                        helperText="Email cannot be changed"
-                      />
-
-                      <Input
-                        label="Phone Number"
-                        type="tel"
-                        {...register("phone", {
-                          pattern: {
-                            value:
-                              /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/,
-                            message: "Please enter a valid phone number",
-                          },
+                        label="First Name"
+                        leftIcon={<FiUser size={18} />}
+                        error={profileErrors.firstName?.message}
+                        {...registerProfile("firstName", {
+                          required: "First name is required",
                         })}
-                        error={errors.phone?.message}
-                        leftIcon={<FiPhone size={18} />}
-                        placeholder="+91 98765 43210"
                       />
+                      <Input
+                        label="Last Name"
+                        leftIcon={<FiUser size={18} />}
+                        error={profileErrors.lastName?.message}
+                        {...registerProfile("lastName", {
+                          required: "Last name is required",
+                        })}
+                      />
+                    </div>
 
-                      <div className="flex justify-end">
-                        <Button
-                          type="submit"
-                          isLoading={isLoading}
-                          disabled={!isDirty}
-                        >
-                          Save Changes
-                        </Button>
-                      </div>
-                    </form>
-                  </Card>
-                </motion.div>
-              )}
+                    <Input
+                      label="Email"
+                      type="email"
+                      leftIcon={<FiMail size={18} />}
+                      disabled
+                      {...registerProfile("email")}
+                    />
 
-              {/* Addresses Tab */}
-              {activeTab === "addresses" && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  <Card>
-                    <div className="flex items-center justify-between mb-6">
-                      <h2 className="text-xl font-semibold text-gray-900">
-                        Saved Addresses
-                      </h2>
+                    <Input
+                      label="Phone Number"
+                      type="tel"
+                      placeholder="+91 12345 67890"
+                      leftIcon={<FiPhone size={18} />}
+                      error={profileErrors.phone?.message}
+                      {...registerProfile("phone")}
+                    />
+
+                    <div className="flex justify-end">
+                      <Button
+                        type="submit"
+                        isLoading={isLoading}
+                        disabled={!isProfileDirty}
+                      >
+                        Save Changes
+                      </Button>
+                    </div>
+                  </motion.form>
+                )}
+
+                {/* Addresses Tab */}
+                {activeTab === "addresses" && (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                    <div className="flex justify-between items-center mb-6">
+                      <h3 className="text-lg font-semibold">Saved Addresses</h3>
                       <Button
                         size="sm"
-                        leftIcon={<FiPlus size={18} />}
-                        onClick={() => {
-                          setEditingAddress(null);
-                          resetAddress();
-                          setIsAddressModalOpen(true);
-                        }}
+                        leftIcon={<FiPlus size={16} />}
+                        onClick={() => openAddressModal()}
                       >
                         Add Address
                       </Button>
@@ -358,105 +338,104 @@ const Profile = () => {
                           size={48}
                         />
                         <p className="text-gray-500">No addresses saved yet</p>
+                        <Button
+                          variant="outline"
+                          className="mt-4"
+                          onClick={() => openAddressModal()}
+                        >
+                          Add Your First Address
+                        </Button>
                       </div>
                     ) : (
                       <div className="grid md:grid-cols-2 gap-4">
                         {addresses.map((address) => (
                           <div
                             key={address._id}
-                            className={`relative p-4 border rounded-xl ${
+                            className={`relative p-4 rounded-xl border-2 ${
                               address.isDefault
                                 ? "border-primary-500 bg-primary-50"
                                 : "border-gray-200"
                             }`}
                           >
                             {address.isDefault && (
-                              <span className="absolute top-2 right-2 text-xs bg-primary-600 text-white px-2 py-0.5 rounded-full">
+                              <span className="absolute top-2 right-2 bg-primary-600 text-white text-xs px-2 py-0.5 rounded-full">
                                 Default
                               </span>
                             )}
-                            <div className="mb-3">
-                              <span className="text-xs font-medium text-gray-500 uppercase">
-                                {address.type}
-                              </span>
-                              <p className="font-medium text-gray-900 mt-1">
-                                {address.firstName} {address.lastName}
-                              </p>
-                            </div>
-                            <p className="text-sm text-gray-600">
+
+                            <p className="font-medium text-gray-900">
+                              {address.firstName} {address.lastName}
+                            </p>
+                            <p className="text-gray-600 text-sm mt-1">
                               {address.street}
                               {address.apartment && `, ${address.apartment}`}
-                              <br />
+                            </p>
+                            <p className="text-gray-600 text-sm">
                               {address.city}, {address.state} {address.zipCode}
-                              <br />
+                            </p>
+                            <p className="text-gray-600 text-sm">
                               {address.country}
                             </p>
-                            {address.phone && (
-                              <p className="text-sm text-gray-600 mt-2">
-                                {address.phone}
-                              </p>
-                            )}
-                            <div className="flex items-center gap-2 mt-4 pt-3 border-t border-gray-100">
+                            <p className="text-gray-600 text-sm mt-1">
+                              {address.phone}
+                            </p>
+
+                            <div className="flex gap-2 mt-4">
                               <button
-                                onClick={() => openEditAddress(address)}
-                                className="flex items-center gap-1 text-sm text-gray-600 hover:text-primary-600"
+                                onClick={() => openAddressModal(address)}
+                                className="text-sm text-primary-600 hover:text-primary-700"
                               >
-                                <FiEdit2 size={14} />
                                 Edit
                               </button>
+                              {!address.isDefault && (
+                                <>
+                                  <span className="text-gray-300">|</span>
+                                  <button
+                                    onClick={() =>
+                                      handleSetDefault(address._id)
+                                    }
+                                    className="text-sm text-gray-600 hover:text-gray-900"
+                                  >
+                                    Set as Default
+                                  </button>
+                                </>
+                              )}
+                              <span className="text-gray-300">|</span>
                               <button
                                 onClick={() => handleDeleteAddress(address._id)}
-                                className="flex items-center gap-1 text-sm text-gray-600 hover:text-red-600"
+                                className="text-sm text-red-600 hover:text-red-700"
                               >
-                                <FiTrash2 size={14} />
                                 Delete
                               </button>
-                              {!address.isDefault && (
-                                <button
-                                  onClick={() =>
-                                    handleSetDefaultAddress(address._id)
-                                  }
-                                  className="flex items-center gap-1 text-sm text-gray-600 hover:text-primary-600 ml-auto"
-                                >
-                                  <FiCheck size={14} />
-                                  Set Default
-                                </button>
-                              )}
                             </div>
                           </div>
                         ))}
                       </div>
                     )}
-                  </Card>
-                </motion.div>
-              )}
+                  </motion.div>
+                )}
 
-              {/* Security Tab */}
-              {activeTab === "security" && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  <Card>
-                    <h2 className="text-xl font-semibold text-gray-900 mb-6">
-                      Security Settings
-                    </h2>
-
-                    <div className="space-y-6">
-                      {/* Password Section */}
-                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
-                            <FiLock className="text-gray-600" size={20} />
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-900">
-                              Password
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              Last changed 30 days ago
-                            </p>
-                          </div>
+                {/* Security Tab */}
+                {activeTab === "security" && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="space-y-6"
+                  >
+                    <div className="p-4 border border-gray-200 rounded-xl">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-medium text-gray-900">
+                            Password
+                          </h4>
+                          <p className="text-sm text-gray-500">
+                            Last updated{" "}
+                            {user?.passwordChangedAt
+                              ? new Date(
+                                  user.passwordChangedAt
+                                ).toLocaleDateString()
+                              : "Never"}
+                          </p>
                         </div>
                         <Button
                           variant="outline"
@@ -466,68 +445,51 @@ const Profile = () => {
                           Change Password
                         </Button>
                       </div>
+                    </div>
 
-                      {/* Two-Factor Auth */}
-                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
-                            <FiLock className="text-gray-600" size={20} />
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-900">
-                              Two-Factor Authentication
-                            </p>
-                            <p className="text-sm text-gray-500">
-                              Add extra security to your account
-                            </p>
-                          </div>
+                    <div className="p-4 border border-gray-200 rounded-xl">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-medium text-gray-900">
+                            Email Verification
+                          </h4>
+                          <p className="text-sm text-gray-500">
+                            {user?.isEmailVerified
+                              ? "Your email is verified"
+                              : "Please verify your email"}
+                          </p>
                         </div>
-                        <Button variant="outline" size="sm" disabled>
-                          Coming Soon
-                        </Button>
+                        {user?.isEmailVerified ? (
+                          <span className="flex items-center gap-1 text-green-600">
+                            <FiCheck size={18} />
+                            Verified
+                          </span>
+                        ) : (
+                          <Button variant="outline" size="sm">
+                            Verify Email
+                          </Button>
+                        )}
                       </div>
+                    </div>
 
-                      {/* Connected Accounts */}
-                      <div>
-                        <h3 className="font-medium text-gray-900 mb-4">
-                          Connected Accounts
-                        </h3>
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between p-4 border border-gray-200 rounded-xl">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                                <span className="text-red-600 font-bold">
-                                  G
-                                </span>
-                              </div>
-                              <div>
-                                <p className="font-medium text-gray-900">
-                                  Google
-                                </p>
-                                <p className="text-sm text-gray-500">
-                                  {user?.authProvider === "google"
-                                    ? "Connected"
-                                    : "Not connected"}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
+                    <div className="p-4 border border-red-200 rounded-xl bg-red-50">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-medium text-red-900">
+                            Delete Account
+                          </h4>
+                          <p className="text-sm text-red-700">
+                            Permanently delete your account and all data
+                          </p>
                         </div>
-                      </div>
-
-                      {/* Danger Zone */}
-                      <div className="pt-6 border-t border-gray-200">
-                        <h3 className="font-medium text-red-600 mb-4">
-                          Danger Zone
-                        </h3>
                         <Button variant="danger" size="sm">
                           Delete Account
                         </Button>
                       </div>
                     </div>
-                  </Card>
-                </motion.div>
-              )}
+                  </motion.div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -551,87 +513,66 @@ const Profile = () => {
           <div className="grid grid-cols-2 gap-4">
             <Input
               label="First Name"
-              {...registerAddress("firstName", { required: "Required" })}
               error={addressErrors.firstName?.message}
+              {...registerAddress("firstName", { required: "Required" })}
             />
             <Input
               label="Last Name"
-              {...registerAddress("lastName", { required: "Required" })}
               error={addressErrors.lastName?.message}
+              {...registerAddress("lastName", { required: "Required" })}
             />
           </div>
 
           <Input
             label="Street Address"
-            {...registerAddress("street", { required: "Required" })}
             error={addressErrors.street?.message}
+            {...registerAddress("street", { required: "Required" })}
           />
 
           <Input
-            label="Apartment, Suite, etc. (optional)"
+            label="Apartment, Suite, etc. (Optional)"
             {...registerAddress("apartment")}
           />
 
           <div className="grid grid-cols-2 gap-4">
             <Input
               label="City"
-              {...registerAddress("city", { required: "Required" })}
               error={addressErrors.city?.message}
+              {...registerAddress("city", { required: "Required" })}
             />
             <Input
               label="State"
-              {...registerAddress("state", { required: "Required" })}
               error={addressErrors.state?.message}
+              {...registerAddress("state", { required: "Required" })}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <Input
               label="PIN Code"
-              {...registerAddress("zipCode", { required: "Required" })}
               error={addressErrors.zipCode?.message}
+              {...registerAddress("zipCode", { required: "Required" })}
             />
             <Input
-              label="Country"
-              {...registerAddress("country", { required: "Required" })}
-              error={addressErrors.country?.message}
-              defaultValue="India"
+              label="Phone"
+              error={addressErrors.phone?.message}
+              {...registerAddress("phone", { required: "Required" })}
             />
-          </div>
-
-          <Input
-            label="Phone Number"
-            type="tel"
-            {...registerAddress("phone", { required: "Required" })}
-            error={addressErrors.phone?.message}
-          />
-
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="isDefault"
-              {...registerAddress("isDefault")}
-              className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-            />
-            <label htmlFor="isDefault" className="text-sm text-gray-700">
-              Set as default address
-            </label>
           </div>
 
           <div className="flex justify-end gap-3 pt-4">
             <Button
               type="button"
-              variant="secondary"
+              variant="ghost"
               onClick={() => {
                 setIsAddressModalOpen(false);
                 setEditingAddress(null);
-                resetAddress();
               }}
             >
               Cancel
             </Button>
-            <Button type="submit" isLoading={isLoading}>
-              {editingAddress ? "Update" : "Add"} Address
+            <Button type="submit">
+              {editingAddress ? "Update Address" : "Add Address"}
             </Button>
           </div>
         </form>
@@ -653,55 +594,45 @@ const Profile = () => {
           <Input
             label="Current Password"
             type="password"
+            error={passwordErrors.currentPassword?.message}
             {...registerPassword("currentPassword", {
               required: "Current password is required",
             })}
-            error={passwordErrors.currentPassword?.message}
           />
 
           <Input
             label="New Password"
             type="password"
+            error={passwordErrors.newPassword?.message}
             {...registerPassword("newPassword", {
               required: "New password is required",
               minLength: {
                 value: 8,
                 message: "Password must be at least 8 characters",
               },
-              pattern: {
-                value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-                message:
-                  "Password must contain uppercase, lowercase and number",
-              },
             })}
-            error={passwordErrors.newPassword?.message}
           />
 
           <Input
             label="Confirm New Password"
             type="password"
+            error={passwordErrors.confirmPassword?.message}
             {...registerPassword("confirmPassword", {
               required: "Please confirm your password",
-              validate: (val) =>
-                val === watch("newPassword") || "Passwords do not match",
+              validate: (value) =>
+                value === newPassword || "Passwords do not match",
             })}
-            error={passwordErrors.confirmPassword?.message}
           />
 
           <div className="flex justify-end gap-3 pt-4">
             <Button
               type="button"
-              variant="secondary"
-              onClick={() => {
-                setIsPasswordModalOpen(false);
-                resetPassword();
-              }}
+              variant="ghost"
+              onClick={() => setIsPasswordModalOpen(false)}
             >
               Cancel
             </Button>
-            <Button type="submit" isLoading={isLoading}>
-              Update Password
-            </Button>
+            <Button type="submit">Update Password</Button>
           </div>
         </form>
       </Modal>
