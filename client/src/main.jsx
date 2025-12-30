@@ -8,6 +8,7 @@ import App from "./App";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 import { WishlistProvider } from "./context/WishlistContext";
+import CartDrawer from "./components/cart/CartDrawer";
 import "./index.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
@@ -18,6 +19,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           <CartProvider>
             <WishlistProvider>
               <App />
+               <CartDrawer />
               <Toaster
                 position="top-right"
                 toastOptions={{

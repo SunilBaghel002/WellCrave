@@ -1,5 +1,5 @@
 // src/components/layout/Navbar.jsx
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import clsx from "clsx";
@@ -35,7 +35,6 @@ const BrandLogo = ({ size = "default", className = "" }) => {
 
   return (
     <Link to="/" className={`inline-flex items-center gap-2 ${className}`}>
-      {/* Logo Icon */}
       <motion.div
         whileHover={{ rotate: [0, -10, 10, 0] }}
         transition={{ duration: 0.5 }}
@@ -51,7 +50,6 @@ const BrandLogo = ({ size = "default", className = "" }) => {
         />
       </motion.div>
 
-      {/* Brand Name */}
       <div
         className={`font-display font-bold ${sizeClasses[size]} hidden sm:block`}
       >
@@ -75,7 +73,7 @@ const Navbar = () => {
   const userButtonRef = useRef(null);
 
   const { isAuthenticated, user, logout } = useAuth();
-  const { totalItems, setIsCartOpen } = useCart();
+  const { totalItems, openCart } = useCart();
   const { itemCount: wishlistCount } = useWishlist();
   const navigate = useNavigate();
   const location = useLocation();
@@ -159,11 +157,19 @@ const Navbar = () => {
     logout();
   };
 
-  const handleCartOpen = () => {
-    setIsUserMenuOpen(false);
-    setIsMobileMenuOpen(false);
-    setIsCartOpen(true);
-  };
+  // Cart open handler - using useCallback to prevent stale closures
+  const handleCartOpen = useCallback(
+    (e) => {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      setIsUserMenuOpen(false);
+      setIsMobileMenuOpen(false);
+      openCart();
+    },
+    [openCart]
+  );
 
   const navLinks = [
     { to: "/", label: "Home", icon: FiHome },
@@ -203,7 +209,7 @@ const Navbar = () => {
           )}
         </AnimatePresence> */}
 
-        <div className="container-custom h-fit">
+        <div className="container-custom">
           <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
             <BrandLogo />
@@ -291,8 +297,9 @@ const Navbar = () => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleCartOpen}
+                type="button"
                 className="relative p-2.5 text-gray-600 hover:text-teal-600 hover:bg-teal-50 rounded-xl transition-all duration-300"
-                aria-label="Cart"
+                aria-label="Open cart"
               >
                 <FiShoppingCart size={20} />
                 <AnimatePresence>
@@ -494,7 +501,6 @@ const Navbar = () => {
       <AnimatePresence>
         {isMobileMenuOpen && (
           <>
-            {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -503,7 +509,6 @@ const Navbar = () => {
               className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
             />
 
-            {/* Menu Panel */}
             <motion.div
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
@@ -511,7 +516,6 @@ const Navbar = () => {
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
               className="fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-white z-50 lg:hidden shadow-2xl"
             >
-              {/* Menu Header */}
               <div className="flex items-center justify-between p-4 border-b border-gray-100">
                 <BrandLogo size="small" />
                 <motion.button
@@ -523,9 +527,7 @@ const Navbar = () => {
                 </motion.button>
               </div>
 
-              {/* Menu Content */}
               <div className="flex flex-col h-[calc(100%-80px)] overflow-y-auto">
-                {/* Navigation Links */}
                 <nav className="p-4 space-y-1">
                   {navLinks.map((link, index) => (
                     <motion.div
@@ -553,10 +555,8 @@ const Navbar = () => {
                   ))}
                 </nav>
 
-                {/* Divider */}
                 <div className="border-t border-gray-100 mx-4" />
 
-                {/* Quick Actions */}
                 <div className="p-4 space-y-1">
                   <button
                     onClick={handleCartOpen}
@@ -592,10 +592,8 @@ const Navbar = () => {
                   )}
                 </div>
 
-                {/* Spacer */}
                 <div className="flex-1" />
 
-                {/* Auth Section */}
                 <div className="p-4 border-t border-gray-100">
                   {isAuthenticated ? (
                     <div className="space-y-3">
@@ -716,10 +714,9 @@ const Navbar = () => {
                   </button>
                 </form>
 
-                {/* Quick Links */}
                 <div className="mt-6 flex flex-wrap gap-2 justify-center">
                   <span className="text-white/70 text-sm">Popular:</span>
-                  {["Dry Fruits", "Trail Mix", "Mango Slices", "Almonds"].map(
+                  {["Almonds", "Trail Mix", "Mango Slices", "Cashews"].map(
                     (term) => (
                       <button
                         key={term}

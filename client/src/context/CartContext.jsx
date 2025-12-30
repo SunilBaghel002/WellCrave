@@ -27,75 +27,124 @@ export const CartProvider = ({ children }) => {
     }
   }, [isAuthenticated]);
 
-  const fetchCart = async () => {
+  // Fetch cart
+  const fetchCart = useCallback(async () => {
+    if (!isAuthenticated) {
+      setCart(null);
+      return;
+    }
+
     try {
       setIsLoading(true);
       const { data } = await cartAPI.get();
       setCart(data.data);
     } catch (error) {
       console.error("Error fetching cart:", error);
+      setCart(null);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [isAuthenticated]);
 
-  const addToCart = useCallback(async (productId, variantId, quantity = 1) => {
-    try {
-      setIsLoading(true);
-      const { data } = await cartAPI.addItem({
-        productId,
-        variantId,
-        quantity,
-      });
-      setCart(data.data);
-      toast.success("Added to cart!");
-      setIsCartOpen(true);
-      return { success: true };
-    } catch (error) {
-      const message = error.response?.data?.message || "Failed to add to cart";
-      toast.error(message);
-      return { success: false, error: message };
-    } finally {
-      setIsLoading(false);
-    }
+  // Open cart drawer
+  const openCart = useCallback(() => {
+    setIsCartOpen(true);
   }, []);
 
-  const updateQuantity = useCallback(async (productId, variantId, quantity) => {
-    try {
-      setIsLoading(true);
-      const { data } = await cartAPI.updateItem({
-        productId,
-        variantId,
-        quantity,
-      });
-      setCart(data.data);
-      return { success: true };
-    } catch (error) {
-      const message = error.response?.data?.message || "Failed to update cart";
-      toast.error(message);
-      return { success: false, error: message };
-    } finally {
-      setIsLoading(false);
-    }
+  // Close cart drawer
+  const closeCart = useCallback(() => {
+    setIsCartOpen(false);
   }, []);
 
-  const removeFromCart = useCallback(async (productId, variantId) => {
-    try {
-      setIsLoading(true);
-      const { data } = await cartAPI.removeItem(productId, variantId);
-      setCart(data.data);
-      toast.success("Removed from cart");
-      return { success: true };
-    } catch (error) {
-      const message = error.response?.data?.message || "Failed to remove item";
-      toast.error(message);
-      return { success: false, error: message };
-    } finally {
-      setIsLoading(false);
-    }
+  // Toggle cart drawer
+  const toggleCart = useCallback(() => {
+    setIsCartOpen((prev) => !prev);
   }, []);
 
+  // Add to cart
+  const addToCart = useCallback(
+    async (productId, variantId, quantity = 1) => {
+      if (!isAuthenticated) {
+        toast.error("Please login to add items to cart");
+        return { success: false, error: "Not authenticated" };
+      }
+
+      try {
+        setIsLoading(true);
+        const { data } = await cartAPI.addItem({
+          productId,
+          variantId,
+          quantity,
+        });
+        setCart(data.data);
+        toast.success("Added to cart!");
+        setIsCartOpen(true);
+        return { success: true };
+      } catch (error) {
+        const message =
+          error.response?.data?.message || "Failed to add to cart";
+        toast.error(message);
+        return { success: false, error: message };
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [isAuthenticated]
+  );
+
+  // Update quantity
+  const updateQuantity = useCallback(
+    async (productId, variantId, quantity) => {
+      if (!isAuthenticated) return { success: false };
+
+      try {
+        setIsLoading(true);
+        const { data } = await cartAPI.updateItem({
+          productId,
+          variantId,
+          quantity,
+        });
+        setCart(data.data);
+        return { success: true };
+      } catch (error) {
+        const message =
+          error.response?.data?.message || "Failed to update cart";
+        toast.error(message);
+        return { success: false, error: message };
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [isAuthenticated]
+  );
+
+  // Remove from cart
+  const removeFromCart = useCallback(
+    async (productId, variantId) => {
+      if (!isAuthenticated) return { success: false };
+
+      try {
+        setIsLoading(true);
+        const { data } = await cartAPI.removeItem(productId, variantId);
+        setCart(data.data);
+        toast.success("Removed from cart");
+        return { success: true };
+      } catch (error) {
+        const message =
+          error.response?.data?.message || "Failed to remove item";
+        toast.error(message);
+        return { success: false, error: message };
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [isAuthenticated]
+  );
+
+  // Clear cart
   const clearCart = useCallback(async () => {
+    if (!isAuthenticated) return { success: false };
+
     try {
       setIsLoading(true);
       await cartAPI.clear();
@@ -109,25 +158,34 @@ export const CartProvider = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [isAuthenticated]);
 
-  const applyCoupon = useCallback(async (code) => {
-    try {
-      setIsLoading(true);
-      const { data } = await cartAPI.applyCoupon(code);
-      setCart(data.data);
-      toast.success("Coupon applied!");
-      return { success: true };
-    } catch (error) {
-      const message = error.response?.data?.message || "Invalid coupon code";
-      toast.error(message);
-      return { success: false, error: message };
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+  // Apply coupon
+  const applyCoupon = useCallback(
+    async (code) => {
+      if (!isAuthenticated) return { success: false };
 
+      try {
+        setIsLoading(true);
+        const { data } = await cartAPI.applyCoupon(code);
+        setCart(data.data);
+        toast.success("Coupon applied!");
+        return { success: true };
+      } catch (error) {
+        const message = error.response?.data?.message || "Invalid coupon code";
+        toast.error(message);
+        return { success: false, error: message };
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [isAuthenticated]
+  );
+
+  // Remove coupon
   const removeCoupon = useCallback(async () => {
+    if (!isAuthenticated) return { success: false };
+
     try {
       setIsLoading(true);
       const { data } = await cartAPI.removeCoupon();
@@ -140,8 +198,9 @@ export const CartProvider = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [isAuthenticated]);
 
+  // Calculate counts
   const itemCount = cart?.items?.length || 0;
   const totalItems =
     cart?.items?.reduce((sum, item) => sum + item.quantity, 0) || 0;
@@ -151,6 +210,9 @@ export const CartProvider = ({ children }) => {
     isLoading,
     isCartOpen,
     setIsCartOpen,
+    openCart,
+    closeCart,
+    toggleCart,
     fetchCart,
     addToCart,
     updateQuantity,
