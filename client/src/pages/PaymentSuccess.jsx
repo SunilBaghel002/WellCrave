@@ -15,16 +15,20 @@ import Button from "../components/common/Button";
 import Loader from "../components/common/Loader";
 import { ordersAPI } from "../api/orders";
 import { formatPrice, formatDate } from "../utils/helpers";
+import { useAuth } from "../context/AuthContext";
 
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [order, setOrder] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [orders, setOrders] = useState([]);
 
-  const orderId = searchParams.get("order_id");
-  const orderNumber = searchParams.get("order_number");
+  // Support both orderId and order_id for compatibility
+  const orderId = searchParams.get("orderId") || searchParams.get("order_id");
+  const orderNumber = searchParams.get("orderNumber") || searchParams.get("order_number");
 
   useEffect(() => {
     // Trigger confetti animation
@@ -73,14 +77,47 @@ const PaymentSuccess = () => {
 
         if (orderId) {
           response = await ordersAPI.getById(orderId);
+          setOrder(response.data.data);
         } else if (orderNumber) {
           response = await ordersAPI.getByNumber(orderNumber);
+          setOrder(response.data.data);
         }
 
-        setOrder(response.data.data);
+        // If order not found, try to fetch user's recent orders
+        if (!response?.data?.data && isAuthenticated) {
+          try {
+            const ordersResponse = await ordersAPI.getMyOrders({ limit: 5 });
+            if (ordersResponse.data.data?.orders?.length > 0) {
+              setOrders(ordersResponse.data.data.orders);
+              setError("Order not found. Here are your recent orders:");
+            } else {
+              setError("Order not found");
+            }
+          } catch (ordersErr) {
+            console.error("Error fetching orders:", ordersErr);
+            setError("Order not found");
+          }
+        }
       } catch (err) {
         console.error("Error fetching order:", err);
-        setError("Failed to load order details");
+        
+        // If order not found, try to fetch user's recent orders
+        if (isAuthenticated && err.response?.status === 404) {
+          try {
+            const ordersResponse = await ordersAPI.getMyOrders({ limit: 5 });
+            if (ordersResponse.data.data?.orders?.length > 0) {
+              setOrders(ordersResponse.data.data.orders);
+              setError("Order not found. Here are your recent orders:");
+            } else {
+              setError("Order not found");
+            }
+          } catch (ordersErr) {
+            console.error("Error fetching orders:", ordersErr);
+            setError("Failed to load order details");
+          }
+        } else {
+          setError("Failed to load order details");
+        }
       } finally {
         setIsLoading(false);
       }
@@ -93,20 +130,75 @@ const PaymentSuccess = () => {
     return <Loader fullScreen text="Loading order details..." />;
   }
 
-  if (error) {
+  if (error && !order) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <div className="text-center">
-          <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <FiPackage className="w-10 h-10 text-red-500" />
+      <div className="min-h-screen bg-gray-50 py-12 px-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <FiPackage className="w-10 h-10 text-red-500" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              Order Not Found
+            </h1>
+            <p className="text-gray-600 mb-6">{error}</p>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Order Not Found
-          </h1>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <Link to="/orders">
-            <Button>View All Orders</Button>
-          </Link>
+
+          {/* Show recent orders if available */}
+          {orders.length > 0 && (
+            <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                Your Recent Orders
+              </h2>
+              <div className="space-y-4">
+                {orders.map((orderItem) => (
+                  <Link
+                    key={orderItem._id}
+                    to={`/orders/${orderItem._id}`}
+                    className="block p-4 border border-gray-200 rounded-xl hover:border-primary-500 hover:bg-primary-50 transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          Order #{orderItem.orderNumber}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          {formatDate(orderItem.createdAt)}
+                        </p>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {orderItem.items.length} item(s) • {formatPrice(orderItem.total)}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
+                          orderItem.status === "confirmed" ? "bg-green-100 text-green-700" :
+                          orderItem.status === "processing" ? "bg-blue-100 text-blue-700" :
+                          orderItem.status === "shipped" ? "bg-purple-100 text-purple-700" :
+                          orderItem.status === "delivered" ? "bg-green-100 text-green-700" :
+                          "bg-gray-100 text-gray-700"
+                        }`}>
+                          {orderItem.status?.charAt(0).toUpperCase() + orderItem.status?.slice(1).replace(/_/g, " ")}
+                        </span>
+                        <p className={`text-sm mt-1 ${
+                          orderItem.payment?.status === "completed" ? "text-green-600" :
+                          orderItem.payment?.status === "pending" ? "text-orange-600" :
+                          "text-gray-600"
+                        }`}>
+                          {orderItem.payment?.method === "cod" ? "COD" : "Paid"} • {orderItem.payment?.status}
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="text-center">
+            <Link to="/orders">
+              <Button>View All Orders</Button>
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -244,44 +336,97 @@ const PaymentSuccess = () => {
               </div>
             </div>
 
-            {/* Shipping Address */}
-            <div className="p-6 border-t border-gray-100">
-              <h3 className="font-semibold text-gray-900 mb-3">
-                Shipping Address
-              </h3>
-              <div className="text-gray-600">
-                <p className="font-medium text-gray-900">
-                  {order?.shippingAddress?.firstName}{" "}
-                  {order?.shippingAddress?.lastName}
-                </p>
-                <p>{order?.shippingAddress?.street}</p>
-                {order?.shippingAddress?.apartment && (
-                  <p>{order?.shippingAddress?.apartment}</p>
+            {/* Shipping Address / Delivery Info */}
+            {(order?.shippingAddress || order?.deliveryType === "store_pickup") && (
+              <div className="p-6 border-t border-gray-100">
+                <h3 className="font-semibold text-gray-900 mb-3">
+                  {order?.deliveryType === "store_pickup" ? "Pickup Location" : "Shipping Address"}
+                </h3>
+                {order?.deliveryType === "store_pickup" ? (
+                  <div className="text-gray-600">
+                    <p className="font-medium text-gray-900">Store Pickup</p>
+                    <p>123 Main Street, Mumbai, Maharashtra - 400001</p>
+                    <p className="mt-2">Phone: +91 98765 43210</p>
+                    <p className="text-sm text-gray-500 mt-2">
+                      We'll notify you when your order is ready for pickup.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="text-gray-600">
+                    <p className="font-medium text-gray-900">
+                      {order?.shippingAddress?.firstName}{" "}
+                      {order?.shippingAddress?.lastName}
+                    </p>
+                    <p>{order?.shippingAddress?.street}</p>
+                    {order?.shippingAddress?.apartment && (
+                      <p>{order?.shippingAddress?.apartment}</p>
+                    )}
+                    <p>
+                      {order?.shippingAddress?.city},{" "}
+                      {order?.shippingAddress?.state}{" "}
+                      {order?.shippingAddress?.zipCode}
+                    </p>
+                    <p>{order?.shippingAddress?.country}</p>
+                    <p className="mt-2">{order?.shippingAddress?.phone}</p>
+                  </div>
                 )}
-                <p>
-                  {order?.shippingAddress?.city},{" "}
-                  {order?.shippingAddress?.state}{" "}
-                  {order?.shippingAddress?.zipCode}
-                </p>
-                <p>{order?.shippingAddress?.country}</p>
-                <p className="mt-2">{order?.shippingAddress?.phone}</p>
               </div>
-            </div>
+            )}
 
             {/* Payment Info */}
             <div className="p-6 border-t border-gray-100">
               <h3 className="font-semibold text-gray-900 mb-3">
                 Payment Information
               </h3>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <span className="text-blue-600 font-bold text-sm">RP</span>
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  {order?.payment?.method === "cod" ? (
+                    <>
+                      <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                        <FiPackage className="text-orange-600" size={20} />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-900">Cash on Delivery</p>
+                        <p className="text-sm text-gray-500">
+                          Payment Status: {order?.payment?.status === "pending" ? "Pending" : "Completed"}
+                        </p>
+                        <p className="text-sm text-gray-500 mt-1">
+                          You'll pay when your order is delivered
+                        </p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <span className="text-blue-600 font-bold text-sm">RP</span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-900">Paid via Razorpay</p>
+                        <p className="text-sm text-gray-500">
+                          Payment ID: {order?.payment?.razorpayPaymentId || "N/A"}
+                        </p>
+                        <p className="text-sm text-green-600 mt-1 font-medium">
+                          Payment Status: {order?.payment?.status === "completed" ? "Completed" : order?.payment?.status}
+                        </p>
+                      </div>
+                    </>
+                  )}
                 </div>
-                <div>
-                  <p className="font-medium text-gray-900">Paid via Razorpay</p>
-                  <p className="text-sm text-gray-500">
-                    Payment ID: {order?.payment?.razorpayPaymentId}
-                  </p>
+                
+                {/* Order Status */}
+                <div className="pt-3 border-t border-gray-100">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Order Status:</span>
+                    <span className={`text-sm font-medium ${
+                      order?.status === "confirmed" ? "text-green-600" :
+                      order?.status === "processing" ? "text-blue-600" :
+                      order?.status === "shipped" ? "text-purple-600" :
+                      order?.status === "delivered" ? "text-green-600" :
+                      "text-gray-600"
+                    }`}>
+                      {order?.status?.charAt(0).toUpperCase() + order?.status?.slice(1).replace(/_/g, " ")}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
