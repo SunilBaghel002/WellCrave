@@ -24,6 +24,7 @@ const Checkout = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [deliveryType, setDeliveryType] = useState("home_delivery");
+  const [paymentMethod, setPaymentMethod] = useState("razorpay");
 
   useEffect(() => {
     const initialize = async () => {
@@ -55,7 +56,7 @@ const Checkout = () => {
     setStep(2);
   };
 
-  const handlePayment = async () => {
+  const handlePayment = async (method) => {
     if (deliveryType === "home_delivery" && !shippingAddress) {
       toast.error("Please add a shipping address");
       setStep(1);
@@ -65,7 +66,21 @@ const Checkout = () => {
     setIsProcessing(true);
 
     try {
-      // Create Razorpay order
+      // Handle COD (Cash on Delivery)
+      if (method === "cod") {
+        const { data } = await paymentAPI.createCODOrder({
+          shippingAddress: deliveryType === "home_delivery" ? shippingAddress : null,
+          deliveryType,
+        });
+
+        if (data.success) {
+          toast.success("Order placed successfully!");
+          navigate(`/payment/success?orderId=${data.data.orderId}`);
+        }
+        return;
+      }
+
+      // Handle Razorpay payment
       const { data } = await paymentAPI.createOrder({ 
         shippingAddress: deliveryType === "home_delivery" ? shippingAddress : null,
         deliveryType 
@@ -107,7 +122,7 @@ const Checkout = () => {
           contact: data.data.prefill.contact,
         },
         theme: {
-          color: "#16a34a",
+          color: "#6366f1",
         },
         modal: {
           ondismiss: function () {
@@ -129,7 +144,7 @@ const Checkout = () => {
       razorpay.open();
     } catch (error) {
       console.error("Payment error:", error);
-      toast.error("Failed to initiate payment");
+      toast.error(error.response?.data?.message || "Failed to process order");
       setIsProcessing(false);
     }
   };
@@ -399,6 +414,8 @@ const Checkout = () => {
                       onPay={handlePayment}
                       isLoading={isProcessing}
                       total={cart.total}
+                      paymentMethod={paymentMethod}
+                      onMethodChange={setPaymentMethod}
                     />
                   </>
                 )}

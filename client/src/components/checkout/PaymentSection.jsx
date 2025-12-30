@@ -1,7 +1,7 @@
 // src/components/checkout/PaymentSection.jsx
 import { useState } from "react";
 import clsx from "clsx";
-import { FiCreditCard, FiSmartphone, FiShield } from "react-icons/fi";
+import { FiCreditCard, FiSmartphone, FiShield, FiPackage } from "react-icons/fi";
 import Button from "../common/Button";
 
 const paymentMethods = [
@@ -12,15 +12,22 @@ const paymentMethods = [
     icon: FiCreditCard,
   },
   {
-    id: "upi",
-    name: "UPI",
-    description: "Google Pay, PhonePe, Paytm, etc.",
-    icon: FiSmartphone,
+    id: "cod",
+    name: "Pay on Delivery",
+    description: "Pay cash when your order is delivered",
+    icon: FiPackage,
   },
 ];
 
-const PaymentSection = ({ onPay, isLoading, total }) => {
-  const [selectedMethod, setSelectedMethod] = useState("razorpay");
+const PaymentSection = ({ onPay, isLoading, total, paymentMethod, onMethodChange }) => {
+  const [selectedMethod, setSelectedMethod] = useState(paymentMethod || "razorpay");
+
+  const handleMethodChange = (method) => {
+    setSelectedMethod(method);
+    if (onMethodChange) {
+      onMethodChange(method);
+    }
+  };
 
   const handlePayment = () => {
     onPay(selectedMethod);
@@ -47,7 +54,7 @@ const PaymentSection = ({ onPay, isLoading, total }) => {
               name="paymentMethod"
               value={method.id}
               checked={selectedMethod === method.id}
-              onChange={() => setSelectedMethod(method.id)}
+              onChange={() => handleMethodChange(method.id)}
               className="mt-1 w-4 h-4 text-primary-600 focus:ring-primary-500"
             />
             <div className="flex-1">
@@ -68,28 +75,45 @@ const PaymentSection = ({ onPay, isLoading, total }) => {
         ))}
       </div>
 
-      {/* Security Badge */}
-      <div className="flex items-center gap-2 p-4 bg-gray-50 rounded-xl">
-        <FiShield className="text-green-600" size={20} />
-        <div>
-          <p className="text-sm font-medium text-gray-900">Secure Payment</p>
-          <p className="text-xs text-gray-500">
-            Your payment information is encrypted and secure
-          </p>
-        </div>
-      </div>
+      {/* Security Badge - Only for online payments */}
+      {selectedMethod !== "cod" && (
+        <>
+          <div className="flex items-center gap-2 p-4 bg-gray-50 rounded-xl">
+            <FiShield className="text-green-600" size={20} />
+            <div>
+              <p className="text-sm font-medium text-gray-900">Secure Payment</p>
+              <p className="text-xs text-gray-500">
+                Your payment information is encrypted and secure
+              </p>
+            </div>
+          </div>
 
-      {/* Payment Logos */}
-      <div className="flex items-center justify-center gap-4 py-4">
-        <img src="/visa.svg" alt="Visa" className="h-8 opacity-60" />
-        <img
-          src="/mastercard.svg"
-          alt="Mastercard"
-          className="h-8 opacity-60"
-        />
-        <img src="/rupay.svg" alt="RuPay" className="h-8 opacity-60" />
-        <img src="/upi.svg" alt="UPI" className="h-8 opacity-60" />
-      </div>
+          {/* Payment Logos */}
+          <div className="flex items-center justify-center gap-4 py-4">
+            <img src="/visa.svg" alt="Visa" className="h-8 opacity-60" />
+            <img
+              src="/mastercard.svg"
+              alt="Mastercard"
+              className="h-8 opacity-60"
+            />
+            <img src="/rupay.svg" alt="RuPay" className="h-8 opacity-60" />
+            <img src="/upi.svg" alt="UPI" className="h-8 opacity-60" />
+          </div>
+        </>
+      )}
+
+      {/* COD Info */}
+      {selectedMethod === "cod" && (
+        <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+          <FiPackage className="text-blue-600 mt-0.5" size={20} />
+          <div>
+            <p className="text-sm font-medium text-blue-900">Cash on Delivery</p>
+            <p className="text-xs text-blue-700 mt-1">
+              Pay with cash when your order arrives. A small handling fee may apply.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Pay Button */}
       <Button
@@ -99,7 +123,9 @@ const PaymentSection = ({ onPay, isLoading, total }) => {
         size="lg"
         className="mt-4"
       >
-        Pay ₹{total?.toFixed(2)}
+        {selectedMethod === "cod" 
+          ? `Place Order - ₹${total?.toFixed(2)}` 
+          : `Pay ₹${total?.toFixed(2)}`}
       </Button>
 
       <p className="text-xs text-center text-gray-500">

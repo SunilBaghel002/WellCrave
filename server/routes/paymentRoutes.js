@@ -17,6 +17,9 @@ router.use(protect);
 // Create Razorpay order
 router.post("/create-order", paymentController.createOrder);
 
+// Create COD order
+router.post("/create-cod-order", paymentController.createCODOrder);
+
 // Verify payment after completion
 router.post("/verify", paymentController.verifyPayment);
 

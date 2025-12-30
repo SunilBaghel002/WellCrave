@@ -3,6 +3,7 @@ const razorpayService = require("../services/razorpayService");
 const Cart = require("../models/Cart");
 const Order = require("../models/Order");
 const User = require("../models/User");
+const Product = require("../models/Product");
 const emailService = require("../services/emailService");
 const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
@@ -74,6 +75,122 @@ exports.createOrder = catchAsync(async (req, res, next) => {
       notes: {
         shippingAddress: JSON.stringify(shippingAddress),
       },
+    },
+  });
+});
+
+// Create COD (Cash on Delivery) order
+exports.createCODOrder = catchAsync(async (req, res, next) => {
+  const { shippingAddress, deliveryType = "home_delivery" } = req.body;
+
+  // Validate delivery type
+  if (!["home_delivery", "store_pickup"].includes(deliveryType)) {
+    return next(new AppError("Invalid delivery type", 400));
+  }
+
+  // Shipping address is required only for home delivery
+  if (deliveryType === "home_delivery" && !shippingAddress) {
+    return next(new AppError("Shipping address is required for home delivery", 400));
+  }
+
+  const cart = await Cart.findOne({ user: req.user._id }).populate(
+    "items.product"
+  );
+
+  if (!cart || cart.items.length === 0) {
+    return next(new AppError("Cart is empty", 400));
+  }
+
+  // Validate cart items are still available
+  for (const item of cart.items) {
+    if (!item.product || !item.product.isActive) {
+      return next(
+        new AppError(`Product "${item.name}" is no longer available`, 400)
+      );
+    }
+
+    const variant = item.product.variants.id(item.variant);
+    if (!variant || variant.stock < item.quantity) {
+      return next(
+        new AppError(`"${item.name}" does not have sufficient stock`, 400)
+      );
+    }
+  }
+
+  // For store pickup, shipping cost should be 0
+  const shippingCost = deliveryType === "store_pickup" ? 0 : cart.shipping;
+
+  // Create COD order
+  const order = await Order.create({
+    user: req.user._id,
+    items: cart.items.map((item) => ({
+      product: item.product._id,
+      variant: item.variant,
+      name: item.name,
+      image: item.image,
+      size: item.size,
+      weight: item.weight,
+      weightUnit: item.weightUnit,
+      quantity: item.quantity,
+      price: item.price,
+      total: item.price * item.quantity,
+    })),
+    shippingAddress: shippingAddress || null,
+    billingAddress: shippingAddress || null,
+    subtotal: cart.subtotal,
+    discount: cart.discount,
+    coupon: cart.coupon,
+    shipping: {
+      cost: shippingCost,
+      method: deliveryType === "store_pickup" ? "pickup" : "standard",
+    },
+    deliveryType: deliveryType,
+    tax: cart.tax,
+    total: cart.total,
+    payment: {
+      method: "cod",
+      status: "pending",
+    },
+    status: "confirmed",
+  });
+
+  // Add status history
+  order.addStatusHistory(
+    "confirmed",
+    "Order placed with Cash on Delivery payment method",
+    null
+  );
+  await order.save();
+
+  // Clear cart
+  await Cart.findByIdAndDelete(cart._id);
+
+  // Update product stock
+  for (const item of cart.items) {
+    await Product.findOneAndUpdate(
+      { _id: item.product._id, "variants._id": item.variant },
+      {
+        $inc: {
+          "variants.$.stock": -item.quantity,
+          soldCount: item.quantity,
+        },
+      }
+    );
+  }
+
+  // Send confirmation email
+  try {
+    await emailService.sendOrderConfirmation(order, req.user);
+  } catch (emailError) {
+    console.error("Failed to send order confirmation email:", emailError);
+  }
+
+  res.status(200).json({
+    success: true,
+    message: "COD order created successfully",
+    data: {
+      orderId: order._id,
+      orderNumber: order.orderNumber,
     },
   });
 });
