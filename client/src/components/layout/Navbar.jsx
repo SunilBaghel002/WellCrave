@@ -114,22 +114,12 @@ const Navbar = () => {
     };
   }, [isUserMenuOpen]);
 
-  // Close menus on route change
+  // Close menus on route change - ensure mobile menu closes when page loads
   useEffect(() => {
-    // Use a small delay to ensure proper cleanup and prevent state conflicts
-    const closeMenus = () => {
-      setIsUserMenuOpen(false);
-      setIsMobileMenuOpen(false);
-      setIsSearchOpen(false);
-    };
-    
-    // Close immediately
-    closeMenus();
-    
-    // Also close after a brief delay to catch any race conditions
-    const timer = setTimeout(closeMenus, 50);
-    
-    return () => clearTimeout(timer);
+    setIsUserMenuOpen(false);
+    setIsMobileMenuOpen(false);
+    setIsSearchOpen(false);
+    setSearchQuery("");
   }, [location.pathname]);
 
   // Click outside handler for mobile menu
