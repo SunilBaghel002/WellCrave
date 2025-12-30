@@ -97,6 +97,11 @@ const orderSchema = new mongoose.Schema(
         default: "standard",
       },
     },
+    deliveryType: {
+      type: String,
+      enum: ["home_delivery", "store_pickup"],
+      default: "home_delivery",
+    },
     tax: {
       type: Number,
       default: 0,

@@ -23,6 +23,7 @@ const Checkout = () => {
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [deliveryType, setDeliveryType] = useState("home_delivery");
 
   useEffect(() => {
     const initialize = async () => {
@@ -55,7 +56,7 @@ const Checkout = () => {
   };
 
   const handlePayment = async () => {
-    if (!shippingAddress) {
+    if (deliveryType === "home_delivery" && !shippingAddress) {
       toast.error("Please add a shipping address");
       setStep(1);
       return;
@@ -65,7 +66,10 @@ const Checkout = () => {
 
     try {
       // Create Razorpay order
-      const { data } = await paymentAPI.createOrder({ shippingAddress });
+      const { data } = await paymentAPI.createOrder({ 
+        shippingAddress: deliveryType === "home_delivery" ? shippingAddress : null,
+        deliveryType 
+      });
 
       const options = {
         key: data.data.keyId,
@@ -83,7 +87,8 @@ const Checkout = () => {
               razorpayPaymentId: response.razorpay_payment_id,
               razorpaySignature: response.razorpay_signature,
               cartId: data.data.cartId,
-              shippingAddress,
+              shippingAddress: deliveryType === "home_delivery" ? shippingAddress : null,
+              deliveryType,
             });
 
             if (verifyResponse.data.success) {
@@ -189,9 +194,68 @@ const Checkout = () => {
               <div className="bg-white rounded-2xl shadow-card p-6">
                 {step === 1 && (
                   <>
-                    <h2 className="text-lg font-semibold text-gray-900 mb-6">
-                      Shipping Address
-                    </h2>
+                    {/* Delivery Type Selection */}
+                    <div className="mb-6">
+                      <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                        Delivery Option
+                      </h2>
+                      <div className="grid grid-cols-2 gap-4">
+                        <label
+                          className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                            deliveryType === "home_delivery"
+                              ? "border-primary-500 bg-primary-50"
+                              : "border-gray-200 hover:border-gray-300"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="deliveryType"
+                            value="home_delivery"
+                            checked={deliveryType === "home_delivery"}
+                            onChange={(e) => setDeliveryType(e.target.value)}
+                            className="w-4 h-4 text-primary-600 focus:ring-primary-500"
+                          />
+                          <div className="flex-1">
+                            <div className="font-medium text-gray-900">
+                              Home Delivery
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              Get your order delivered to your doorstep
+                            </div>
+                          </div>
+                        </label>
+                        <label
+                          className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                            deliveryType === "store_pickup"
+                              ? "border-primary-500 bg-primary-50"
+                              : "border-gray-200 hover:border-gray-300"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="deliveryType"
+                            value="store_pickup"
+                            checked={deliveryType === "store_pickup"}
+                            onChange={(e) => setDeliveryType(e.target.value)}
+                            className="w-4 h-4 text-primary-600 focus:ring-primary-500"
+                          />
+                          <div className="flex-1">
+                            <div className="font-medium text-gray-900">
+                              Store Pickup
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              Pick up your order from our store
+                            </div>
+                          </div>
+                        </label>
+                      </div>
+                    </div>
+
+                    {deliveryType === "home_delivery" && (
+                      <>
+                        <h2 className="text-lg font-semibold text-gray-900 mb-6">
+                          Shipping Address
+                        </h2>
 
                     {/* Saved Addresses */}
                     {savedAddresses.length > 0 && (
@@ -265,16 +329,42 @@ const Checkout = () => {
                       submitLabel="Continue to Payment"
                       showSaveOption
                     />
+                      </>
+                    )}
+
+                    {deliveryType === "store_pickup" && (
+                      <div className="mb-6">
+                        <div className="p-4 bg-primary-50 rounded-xl border border-primary-200">
+                          <h3 className="font-medium text-gray-900 mb-2">
+                            Store Pickup Information
+                          </h3>
+                          <p className="text-sm text-gray-600 mb-4">
+                            You can pick up your order from our store. We'll notify you when your order is ready for pickup.
+                          </p>
+                          <div className="text-sm text-gray-700">
+                            <p className="font-medium mb-1">Store Address:</p>
+                            <p>123 Main Street, Mumbai, Maharashtra - 400001</p>
+                            <p className="mt-2">Phone: +91 98765 43210</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => setStep(2)}
+                          className="mt-4 w-full py-3 bg-primary-600 text-white rounded-xl font-medium hover:bg-primary-700 transition-colors"
+                        >
+                          Continue to Payment
+                        </button>
+                      </div>
+                    )}
                   </>
                 )}
 
                 {step === 2 && (
                   <>
-                    {/* Selected Address Summary */}
+                    {/* Delivery Type Summary */}
                     <div className="mb-6 p-4 bg-gray-50 rounded-xl">
                       <div className="flex items-center justify-between mb-2">
                         <h3 className="font-medium text-gray-900">
-                          Shipping to
+                          {deliveryType === "home_delivery" ? "Shipping to" : "Pickup Location"}
                         </h3>
                         <button
                           onClick={() => setStep(1)}
@@ -283,16 +373,26 @@ const Checkout = () => {
                           Change
                         </button>
                       </div>
-                      <p className="text-gray-600">
-                        {shippingAddress.firstName} {shippingAddress.lastName}
-                        <br />
-                        {shippingAddress.street}
-                        <br />
-                        {shippingAddress.city}, {shippingAddress.state} -{" "}
-                        {shippingAddress.zipCode}
-                        <br />
-                        {shippingAddress.phone}
-                      </p>
+                      {deliveryType === "home_delivery" && shippingAddress ? (
+                        <p className="text-gray-600">
+                          {shippingAddress.firstName} {shippingAddress.lastName}
+                          <br />
+                          {shippingAddress.street}
+                          <br />
+                          {shippingAddress.city}, {shippingAddress.state} -{" "}
+                          {shippingAddress.zipCode}
+                          <br />
+                          {shippingAddress.phone}
+                        </p>
+                      ) : (
+                        <p className="text-gray-600">
+                          Store Pickup
+                          <br />
+                          123 Main Street, Mumbai, Maharashtra - 400001
+                          <br />
+                          Phone: +91 98765 43210
+                        </p>
+                      )}
                     </div>
 
                     <PaymentSection

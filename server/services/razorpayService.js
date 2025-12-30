@@ -10,7 +10,7 @@ const AppError = require("../utils/appError");
 
 class RazorpayService {
   // Create Razorpay order
-  async createOrder(cart, user, shippingAddress) {
+  async createOrder(cart, user, shippingAddress, deliveryType = "home_delivery") {
     try {
       // Amount in paise (smallest currency unit for INR)
       const amountInPaise = Math.round(cart.total * 100);
@@ -24,7 +24,8 @@ class RazorpayService {
           cartId: cart._id.toString(),
           customerName: `${user.firstName} ${user.lastName}`,
           customerEmail: user.email,
-          shippingAddress: JSON.stringify(shippingAddress),
+          deliveryType: deliveryType,
+          shippingAddress: shippingAddress ? JSON.stringify(shippingAddress) : null,
         },
       };
 
@@ -70,13 +71,16 @@ class RazorpayService {
   }
 
   // Process successful payment
-  async processSuccessfulPayment(paymentData, cartId, userId, shippingAddress) {
+  async processSuccessfulPayment(paymentData, cartId, userId, shippingAddress, deliveryType = "home_delivery") {
     const cart = await Cart.findById(cartId).populate("items.product");
     const user = await User.findById(userId);
 
     if (!cart || !user) {
       throw new AppError("Cart or user not found", 404);
     }
+
+    // For store pickup, shipping cost should be 0
+    const shippingCost = deliveryType === "store_pickup" ? 0 : cart.shipping;
 
     // Create order
     const order = await Order.create({
@@ -93,15 +97,16 @@ class RazorpayService {
         price: item.price,
         total: item.price * item.quantity,
       })),
-      shippingAddress: shippingAddress,
-      billingAddress: shippingAddress,
+      shippingAddress: shippingAddress || null,
+      billingAddress: shippingAddress || null,
       subtotal: cart.subtotal,
       discount: cart.discount,
       coupon: cart.coupon,
       shipping: {
-        cost: cart.shipping,
-        method: "standard",
+        cost: shippingCost,
+        method: deliveryType === "store_pickup" ? "pickup" : "standard",
       },
+      deliveryType: deliveryType,
       tax: cart.tax,
       total: cart.total,
       payment: {
@@ -323,7 +328,7 @@ class RazorpayService {
   }
 
   // Create payment link
-  async createPaymentLink(cart, user, shippingAddress) {
+  async createPaymentLink(cart, user, shippingAddress, deliveryType = "home_delivery") {
     try {
       const paymentLink = await razorpay.paymentLink.create({
         amount: Math.round(cart.total * 100),
@@ -334,7 +339,7 @@ class RazorpayService {
         customer: {
           name: `${user.firstName} ${user.lastName}`,
           email: user.email,
-          contact: user.phone || shippingAddress.phone,
+          contact: user.phone || (shippingAddress?.phone || ""),
         },
         notify: {
           sms: true,
@@ -344,7 +349,8 @@ class RazorpayService {
         notes: {
           userId: user._id.toString(),
           cartId: cart._id.toString(),
-          shippingAddress: JSON.stringify(shippingAddress),
+          deliveryType: deliveryType,
+          shippingAddress: shippingAddress ? JSON.stringify(shippingAddress) : null,
         },
         callback_url: `${process.env.CLIENT_URL}/payment/success`,
         callback_method: "get",

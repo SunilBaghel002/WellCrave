@@ -9,10 +9,16 @@ const catchAsync = require("../utils/catchAsync");
 
 // Create Razorpay order
 exports.createOrder = catchAsync(async (req, res, next) => {
-  const { shippingAddress } = req.body;
+  const { shippingAddress, deliveryType = "home_delivery" } = req.body;
 
-  if (!shippingAddress) {
-    return next(new AppError("Shipping address is required", 400));
+  // Validate delivery type
+  if (!["home_delivery", "store_pickup"].includes(deliveryType)) {
+    return next(new AppError("Invalid delivery type", 400));
+  }
+
+  // Shipping address is required only for home delivery
+  if (deliveryType === "home_delivery" && !shippingAddress) {
+    return next(new AppError("Shipping address is required for home delivery", 400));
   }
 
   const cart = await Cart.findOne({ user: req.user._id }).populate(
@@ -43,7 +49,8 @@ exports.createOrder = catchAsync(async (req, res, next) => {
   const razorpayOrder = await razorpayService.createOrder(
     cart,
     req.user,
-    shippingAddress
+    shippingAddress,
+    deliveryType
   );
 
   res.status(200).json({
@@ -79,6 +86,7 @@ exports.verifyPayment = catchAsync(async (req, res, next) => {
     razorpaySignature,
     cartId,
     shippingAddress,
+    deliveryType = "home_delivery",
   } = req.body;
 
   // Verify signature
@@ -112,7 +120,8 @@ exports.verifyPayment = catchAsync(async (req, res, next) => {
     },
     cartId,
     req.user._id,
-    shippingAddress
+    shippingAddress,
+    deliveryType
   );
 
   // Send confirmation email
@@ -159,7 +168,7 @@ exports.getPaymentDetails = catchAsync(async (req, res, next) => {
 
 // Create payment link
 exports.createPaymentLink = catchAsync(async (req, res, next) => {
-  const { shippingAddress } = req.body;
+  const { shippingAddress, deliveryType = "home_delivery" } = req.body;
 
   const cart = await Cart.findOne({ user: req.user._id }).populate(
     "items.product"
@@ -172,7 +181,8 @@ exports.createPaymentLink = catchAsync(async (req, res, next) => {
   const paymentLink = await razorpayService.createPaymentLink(
     cart,
     req.user,
-    shippingAddress
+    shippingAddress,
+    deliveryType
   );
 
   res.status(200).json({
