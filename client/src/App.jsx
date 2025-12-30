@@ -24,6 +24,8 @@ const Wishlist = lazy(() => import("./pages/Wishlist"));
 const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+import VerifyEmail from "./pages/VerifyEmail";
+import OAuthCallback from "./pages/OAuthCallback";
 
 function App() {
   return (
@@ -37,6 +39,8 @@ function App() {
           <Route path="product/:slug" element={<ProductDetail />} />
           <Route path="about" element={<About />} />
           <Route path="contact" element={<Contact />} />
+          <Route path="verify-email" element={<VerifyEmail />} />
+          <Route path="oauth/callback" element={<OAuthCallback />} />
 
           {/* Auth Routes */}
           <Route path="login" element={<Login />} />
