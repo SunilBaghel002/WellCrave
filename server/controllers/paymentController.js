@@ -120,11 +120,11 @@ exports.createCODOrder = catchAsync(async (req, res, next) => {
   // For store pickup, shipping cost should be 0
   const shippingCost = deliveryType === "store_pickup" ? 0 : cart.shipping;
 
-  // Create COD order
-  const order = await Order.create({
+  // Prepare order data
+  const orderData = {
     user: req.user._id,
     items: cart.items.map((item) => ({
-      product: item.product._id,
+      product: item.product._id || item.product,
       variant: item.variant,
       name: item.name,
       image: item.image,
@@ -135,8 +135,6 @@ exports.createCODOrder = catchAsync(async (req, res, next) => {
       price: item.price,
       total: item.price * item.quantity,
     })),
-    shippingAddress: shippingAddress || null,
-    billingAddress: shippingAddress || null,
     subtotal: cart.subtotal,
     discount: cart.discount,
     coupon: cart.coupon,
@@ -152,7 +150,16 @@ exports.createCODOrder = catchAsync(async (req, res, next) => {
       status: "pending",
     },
     status: "confirmed",
-  });
+  };
+
+  // Only add shipping address if it's home delivery
+  if (deliveryType === "home_delivery" && shippingAddress) {
+    orderData.shippingAddress = shippingAddress;
+    orderData.billingAddress = shippingAddress;
+  }
+
+  // Create COD order
+  const order = await Order.create(orderData);
 
   // Add status history
   order.addStatusHistory(
@@ -167,15 +174,32 @@ exports.createCODOrder = catchAsync(async (req, res, next) => {
 
   // Update product stock
   for (const item of cart.items) {
-    await Product.findOneAndUpdate(
-      { _id: item.product._id, "variants._id": item.variant },
-      {
-        $inc: {
-          "variants.$.stock": -item.quantity,
-          soldCount: item.quantity,
-        },
+    try {
+      const productId = item.product._id || item.product;
+      const product = await Product.findById(productId);
+      if (!product) {
+        console.error(`Product not found: ${productId}`);
+        continue;
       }
-    );
+      
+      const variant = product.variants.id(item.variant);
+      if (!variant) {
+        console.error(`Variant not found: ${item.variant} in product ${productId}`);
+        continue;
+      }
+      
+      if (variant.stock < item.quantity) {
+        console.error(`Insufficient stock for variant ${item.variant}`);
+        continue;
+      }
+      
+      variant.stock -= item.quantity;
+      product.soldCount = (product.soldCount || 0) + item.quantity;
+      await product.save();
+    } catch (stockError) {
+      console.error(`Failed to update stock for product ${item.product._id || item.product}:`, stockError);
+      // Continue with other items even if one fails
+    }
   }
 
   // Send confirmation email
@@ -183,6 +207,7 @@ exports.createCODOrder = catchAsync(async (req, res, next) => {
     await emailService.sendOrderConfirmation(order, req.user);
   } catch (emailError) {
     console.error("Failed to send order confirmation email:", emailError);
+    // Don't fail the request if email fails
   }
 
   res.status(200).json({
