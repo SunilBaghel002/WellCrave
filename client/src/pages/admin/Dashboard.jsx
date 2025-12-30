@@ -11,6 +11,7 @@ import {
   FiTrendingDown,
   FiArrowRight,
   FiAlertCircle,
+  FiTag,
 } from "react-icons/fi";
 import { formatPrice } from "../../utils/helpers";
 

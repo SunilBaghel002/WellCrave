@@ -4,6 +4,7 @@ import { lazy, Suspense } from "react";
 import Layout from "./components/layout/Layout";
 import Loader from "./components/common/Loader";
 import ProtectedRoute from "./components/common/ProtectedRoute";
+import AdminRoute from "./components/common/AdminRoute";
 
 // Lazy load pages
 const Home = lazy(() => import("./pages/Home"));
@@ -17,6 +18,8 @@ const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
+const OAuthCallback = lazy(() => import("./pages/OAuthCallback"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Orders = lazy(() => import("./pages/Orders"));
 const OrderDetail = lazy(() => import("./pages/OrderDetail"));
@@ -24,32 +27,39 @@ const Wishlist = lazy(() => import("./pages/Wishlist"));
 const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
 const NotFound = lazy(() => import("./pages/NotFound"));
-import VerifyEmail from "./pages/VerifyEmail";
-import OAuthCallback from "./pages/OAuthCallback";
+
+// Admin Pages
+const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
+const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
+const AdminProducts = lazy(() => import("./pages/admin/Products"));
+const AdminOrders = lazy(() => import("./pages/admin/Orders"));
+const AdminCustomers = lazy(() => import("./pages/admin/Customers"));
 
 function App() {
   return (
     <Suspense fallback={<Loader fullScreen />}>
       <Routes>
+        {/* Public Routes with Layout */}
         <Route path="/" element={<Layout />}>
-          {/* Public Routes */}
           <Route index element={<Home />} />
           <Route path="shop" element={<Shop />} />
           <Route path="shop/:category" element={<Shop />} />
           <Route path="product/:slug" element={<ProductDetail />} />
           <Route path="about" element={<About />} />
           <Route path="contact" element={<Contact />} />
-          <Route path="verify-email" element={<VerifyEmail />} />
-          <Route path="oauth/callback" element={<OAuthCallback />} />
 
           {/* Auth Routes */}
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
           <Route path="forgot-password" element={<ForgotPassword />} />
           <Route path="reset-password/:token" element={<ResetPassword />} />
+          <Route path="verify-email" element={<VerifyEmail />} />
+          <Route path="oauth/callback" element={<OAuthCallback />} />
+
+          {/* Cart */}
+          <Route path="cart" element={<Cart />} />
 
           {/* Protected Routes */}
-          <Route path="cart" element={<Cart />} />
           <Route
             path="checkout"
             element={
@@ -95,6 +105,21 @@ function App() {
 
           {/* 404 */}
           <Route path="*" element={<NotFound />} />
+        </Route>
+
+        {/* Admin Routes (Separate Layout) */}
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminLayout />
+            </AdminRoute>
+          }
+        >
+          <Route index element={<AdminDashboard />} />
+          <Route path="products" element={<AdminProducts />} />
+          <Route path="orders" element={<AdminOrders />} />
+          <Route path="customers" element={<AdminCustomers />} />
         </Route>
       </Routes>
     </Suspense>
