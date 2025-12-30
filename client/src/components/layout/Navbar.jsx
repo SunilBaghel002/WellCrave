@@ -71,6 +71,8 @@ const Navbar = () => {
 
   const userMenuRef = useRef(null);
   const userButtonRef = useRef(null);
+  const mobileMenuRef = useRef(null);
+  const mobileMenuButtonRef = useRef(null);
 
   const { isAuthenticated, user, logout } = useAuth();
   const { totalItems, openCart } = useCart();
@@ -78,12 +80,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Close menus on route change
-  useEffect(() => {
-    setIsUserMenuOpen(false);
-    setIsMobileMenuOpen(false);
-    setIsSearchOpen(false);
-  }, [location.pathname]);
+  // Close menus on route change - removed duplicate, handled below with delay
 
   // Scroll handler
   useEffect(() => {
@@ -116,6 +113,49 @@ const Navbar = () => {
       document.removeEventListener("touchstart", handleClickOutside);
     };
   }, [isUserMenuOpen]);
+
+  // Close menus on route change
+  useEffect(() => {
+    // Use a small delay to ensure proper cleanup and prevent state conflicts
+    const closeMenus = () => {
+      setIsUserMenuOpen(false);
+      setIsMobileMenuOpen(false);
+      setIsSearchOpen(false);
+    };
+    
+    // Close immediately
+    closeMenus();
+    
+    // Also close after a brief delay to catch any race conditions
+    const timer = setTimeout(closeMenus, 50);
+    
+    return () => clearTimeout(timer);
+  }, [location.pathname]);
+
+  // Click outside handler for mobile menu
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        isMobileMenuOpen &&
+        mobileMenuRef.current &&
+        !mobileMenuRef.current.contains(event.target) &&
+        mobileMenuButtonRef.current &&
+        !mobileMenuButtonRef.current.contains(event.target)
+      ) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    if (isMobileMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("touchstart", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [isMobileMenuOpen]);
 
   // Escape key handler
   useEffect(() => {
@@ -486,15 +526,18 @@ const Navbar = () => {
 
               {/* Mobile Menu Toggle */}
               <motion.button
+                ref={mobileMenuButtonRef}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   setIsSearchOpen(false);
                   setIsUserMenuOpen(false);
-                  setIsMobileMenuOpen(!isMobileMenuOpen);
+                  setIsMobileMenuOpen((prev) => !prev);
                 }}
                 className="lg:hidden p-2 md:p-2.5 text-gray-600 hover:text-teal-600 hover:bg-teal-50 rounded-xl transition-all duration-300"
                 aria-label="Menu"
+                aria-expanded={isMobileMenuOpen}
               >
                 <AnimatePresence mode="wait">
                   {isMobileMenuOpen ? (
@@ -543,6 +586,7 @@ const Navbar = () => {
             />
 
             <motion.div
+              ref={mobileMenuRef}
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
