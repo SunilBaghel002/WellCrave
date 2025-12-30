@@ -146,8 +146,14 @@ const Navbar = () => {
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/shop?search=${encodeURIComponent(searchQuery)}`);
+      const query = searchQuery.trim();
       setSearchQuery("");
+      setIsSearchOpen(false);
+      // Small delay to ensure state updates before navigation
+      setTimeout(() => {
+        navigate(`/shop?search=${encodeURIComponent(query)}`);
+      }, 100);
+    } else {
       setIsSearchOpen(false);
     }
   };
@@ -184,8 +190,8 @@ const Navbar = () => {
         className={clsx(
           "fixed top-0 left-0 right-0 z-40 transition-all duration-500",
           isScrolled
-            ? "bg-white/80 backdrop-blur-xl shadow-lg shadow-gray-200/50 border-b border-gray-100"
-            : "bg-transparent"
+            ? "bg-white/95 backdrop-blur-xl shadow-lg shadow-gray-200/50 border-b border-gray-100"
+            : "bg-white/95 backdrop-blur-sm"
         )}
       >
         {/* Top Banner */}
@@ -210,9 +216,11 @@ const Navbar = () => {
         </AnimatePresence> */}
 
         <div className="container-custom">
-          <div className="flex items-center justify-between h-16 md:h-20">
+          <div className="flex items-center justify-between h-16 md:h-20 gap-2">
             {/* Logo */}
-            <BrandLogo />
+            <div className="flex-shrink-0">
+              <BrandLogo />
+            </div>
 
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center gap-1">
@@ -252,16 +260,20 @@ const Navbar = () => {
             </nav>
 
             {/* Actions */}
-            <div className="flex items-center gap-1 md:gap-2">
+            <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
               {/* Search Button */}
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => setIsSearchOpen(true)}
-                className="relative p-2.5 text-gray-600 hover:text-teal-600 hover:bg-teal-50 rounded-xl transition-all duration-300"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  setIsUserMenuOpen(false);
+                  setIsSearchOpen(true);
+                }}
+                className="relative p-2 md:p-2.5 text-gray-600 hover:text-teal-600 hover:bg-teal-50 rounded-xl transition-all duration-300"
                 aria-label="Search"
               >
-                <FiSearch size={20} />
+                <FiSearch size={18} className="md:w-5 md:h-5" />
               </motion.button>
 
               {/* Wishlist */}
@@ -316,14 +328,18 @@ const Navbar = () => {
                 </AnimatePresence>
               </motion.button>
 
-              {/* User Menu */}
+              {/* User Menu - Hidden on mobile, shown in mobile menu instead */}
               {isAuthenticated ? (
-                <div className="relative">
+                <div className="relative hidden md:block">
                   <motion.button
                     ref={userButtonRef}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      setIsSearchOpen(false);
+                      setIsUserMenuOpen(!isUserMenuOpen);
+                    }}
                     className="flex items-center gap-2 p-1.5 pl-1.5 pr-3 bg-gradient-to-r from-teal-50 to-cyan-50 hover:from-teal-100 hover:to-cyan-100 rounded-full transition-all duration-300 border border-teal-100"
                     aria-label="User menu"
                     aria-expanded={isUserMenuOpen}
@@ -333,13 +349,13 @@ const Navbar = () => {
                         {user?.firstName?.charAt(0)}
                       </span>
                     </div>
-                    <span className="hidden md:block text-sm font-medium text-gray-700">
+                    <span className="hidden lg:block text-sm font-medium text-gray-700">
                       {user?.firstName}
                     </span>
                     <FiChevronDown
                       size={14}
                       className={clsx(
-                        "text-gray-500 transition-transform duration-300 hidden md:block",
+                        "text-gray-500 transition-transform duration-300 hidden lg:block",
                         isUserMenuOpen && "rotate-180"
                       )}
                     />
@@ -397,7 +413,11 @@ const Navbar = () => {
                             <Link
                               key={item.to}
                               to={item.to}
-                              onClick={() => setIsUserMenuOpen(false)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setIsUserMenuOpen(false);
+                                setIsMobileMenuOpen(false);
+                              }}
                               className="flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-gray-50 hover:text-teal-600 transition-colors mx-2 rounded-lg"
                             >
                               <item.icon size={18} />
@@ -412,7 +432,11 @@ const Navbar = () => {
                               <div className="border-t border-gray-100 my-2 mx-4" />
                               <Link
                                 to="/admin"
-                                onClick={() => setIsUserMenuOpen(false)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setIsUserMenuOpen(false);
+                                  setIsMobileMenuOpen(false);
+                                }}
                                 className="flex items-center gap-3 px-4 py-2.5 text-teal-600 hover:bg-teal-50 transition-colors mx-2 rounded-lg"
                               >
                                 <FiGrid size={18} />
@@ -464,8 +488,12 @@ const Navbar = () => {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="lg:hidden p-2.5 text-gray-600 hover:text-teal-600 hover:bg-teal-50 rounded-xl transition-all duration-300"
+                onClick={() => {
+                  setIsSearchOpen(false);
+                  setIsUserMenuOpen(false);
+                  setIsMobileMenuOpen(!isMobileMenuOpen);
+                }}
+                className="lg:hidden p-2 md:p-2.5 text-gray-600 hover:text-teal-600 hover:bg-teal-50 rounded-xl transition-all duration-300"
                 aria-label="Menu"
               >
                 <AnimatePresence mode="wait">
@@ -505,7 +533,12 @@ const Navbar = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setIsMobileMenuOpen(false)}
+              onClick={(e) => {
+                if (e.target === e.currentTarget) {
+                  setIsMobileMenuOpen(false);
+                  setIsUserMenuOpen(false);
+                }
+              }}
               className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
             />
 
@@ -514,14 +547,19 @@ const Navbar = () => {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-white z-50 lg:hidden shadow-2xl"
+              className="fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-white z-50 lg:hidden shadow-2xl overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between p-4 border-b border-gray-100">
                 <BrandLogo size="small" />
                 <motion.button
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => setIsMobileMenuOpen(false)}
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    setIsUserMenuOpen(false);
+                  }}
                   className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-xl"
+                  aria-label="Close menu"
                 >
                   <FiX size={24} />
                 </motion.button>
@@ -538,7 +576,11 @@ const Navbar = () => {
                     >
                       <NavLink
                         to={link.to}
-                        onClick={() => setIsMobileMenuOpen(false)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsMobileMenuOpen(false);
+                          setIsUserMenuOpen(false);
+                        }}
                         className={({ isActive }) =>
                           clsx(
                             "flex items-center gap-3 px-4 py-3.5 rounded-xl font-medium transition-all",
@@ -559,7 +601,12 @@ const Navbar = () => {
 
                 <div className="p-4 space-y-1">
                   <button
-                    onClick={handleCartOpen}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsMobileMenuOpen(false);
+                      setIsUserMenuOpen(false);
+                      handleCartOpen(e);
+                    }}
                     className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl text-gray-700 hover:bg-gray-50 transition-all"
                   >
                     <span className="flex items-center gap-3 font-medium">
@@ -576,7 +623,11 @@ const Navbar = () => {
                   {isAuthenticated && (
                     <Link
                       to="/wishlist"
-                      onClick={() => setIsMobileMenuOpen(false)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsMobileMenuOpen(false);
+                        setIsUserMenuOpen(false);
+                      }}
                       className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl text-gray-700 hover:bg-gray-50 transition-all"
                     >
                       <span className="flex items-center gap-3 font-medium">
@@ -614,7 +665,11 @@ const Navbar = () => {
                       <div className="grid grid-cols-2 gap-2">
                         <Link
                           to="/profile"
-                          onClick={() => setIsMobileMenuOpen(false)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsMobileMenuOpen(false);
+                            setIsUserMenuOpen(false);
+                          }}
                           className="flex items-center justify-center gap-2 py-2.5 bg-gray-100 hover:bg-gray-200 rounded-xl text-gray-700 font-medium transition-colors"
                         >
                           <FiUser size={18} />
@@ -622,7 +677,11 @@ const Navbar = () => {
                         </Link>
                         <Link
                           to="/orders"
-                          onClick={() => setIsMobileMenuOpen(false)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsMobileMenuOpen(false);
+                            setIsUserMenuOpen(false);
+                          }}
                           className="flex items-center justify-center gap-2 py-2.5 bg-gray-100 hover:bg-gray-200 rounded-xl text-gray-700 font-medium transition-colors"
                         >
                           <FiPackage size={18} />
@@ -631,7 +690,12 @@ const Navbar = () => {
                       </div>
 
                       <button
-                        onClick={handleLogout}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsMobileMenuOpen(false);
+                          setIsUserMenuOpen(false);
+                          handleLogout();
+                        }}
                         className="w-full flex items-center justify-center gap-2 py-3 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl font-medium transition-colors"
                       >
                         <FiLogOut size={18} />
@@ -642,7 +706,11 @@ const Navbar = () => {
                     <div className="space-y-3">
                       <Link
                         to="/login"
-                        onClick={() => setIsMobileMenuOpen(false)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsMobileMenuOpen(false);
+                          setIsUserMenuOpen(false);
+                        }}
                         className="block w-full"
                       >
                         <Button
@@ -655,7 +723,11 @@ const Navbar = () => {
                       </Link>
                       <Link
                         to="/register"
-                        onClick={() => setIsMobileMenuOpen(false)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsMobileMenuOpen(false);
+                          setIsUserMenuOpen(false);
+                        }}
                         className="block w-full"
                       >
                         <Button
@@ -682,7 +754,12 @@ const Navbar = () => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 bg-gray-900/60 backdrop-blur-md"
-            onClick={() => setIsSearchOpen(false)}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setIsSearchOpen(false);
+                setSearchQuery("");
+              }
+            }}
           >
             <motion.div
               initial={{ opacity: 0, y: -50, scale: 0.95 }}
@@ -707,8 +784,12 @@ const Navbar = () => {
                   />
                   <button
                     type="button"
-                    onClick={() => setIsSearchOpen(false)}
+                    onClick={() => {
+                      setIsSearchOpen(false);
+                      setSearchQuery("");
+                    }}
                     className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100 transition-colors"
+                    aria-label="Close search"
                   >
                     <FiX size={24} />
                   </button>
@@ -721,9 +802,11 @@ const Navbar = () => {
                       <button
                         key={term}
                         onClick={() => {
-                          setSearchQuery(term);
-                          navigate(`/shop?search=${encodeURIComponent(term)}`);
+                          setSearchQuery("");
                           setIsSearchOpen(false);
+                          setTimeout(() => {
+                            navigate(`/shop?search=${encodeURIComponent(term)}`);
+                          }, 100);
                         }}
                         className="px-4 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-full text-sm transition-colors backdrop-blur-sm"
                       >
