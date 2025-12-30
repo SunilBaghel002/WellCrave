@@ -39,8 +39,7 @@ const wishlistSchema = new mongoose.Schema(
   }
 );
 
-// Index
-wishlistSchema.index({ user: 1 });
+// Index (removed duplicate user index since it has unique: true)
 wishlistSchema.index({ "products.product": 1 });
 
 // Static method to get or create wishlist

@@ -79,9 +79,8 @@ const cartSchema = new mongoose.Schema(
   }
 );
 
-// Index for expiration
+// Index for expiration (removed duplicate user index since it has unique: true)
 cartSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
-cartSchema.index({ user: 1 });
 
 // Calculate totals
 cartSchema.methods.calculateTotals = function (
@@ -105,11 +104,11 @@ cartSchema.methods.calculateTotals = function (
     this.discount = 0;
   }
 
-  // Calculate shipping (free above threshold)
+  // Calculate shipping
   const afterDiscount = this.subtotal - this.discount;
   this.shipping = afterDiscount >= freeShippingThreshold ? 0 : shippingCost;
 
-  // Calculate GST (18% for food products in India)
+  // Calculate tax (GST 18%)
   this.tax = afterDiscount * taxRate;
 
   // Calculate total

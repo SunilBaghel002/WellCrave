@@ -104,8 +104,7 @@ const couponSchema = new mongoose.Schema(
   }
 );
 
-// Indexes
-couponSchema.index({ code: 1 });
+// Indexes (removed duplicate code index since it has unique: true)
 couponSchema.index({ startDate: 1, endDate: 1 });
 couponSchema.index({ isActive: 1 });
 
@@ -162,7 +161,7 @@ couponSchema.methods.calculateDiscount = function (subtotal, cartItems = []) {
   if (subtotal < this.minimumPurchase) {
     return {
       discount: 0,
-      message: `Minimum purchase of $${this.minimumPurchase} required`,
+      message: `Minimum purchase of ₹${this.minimumPurchase} required`,
     };
   }
 

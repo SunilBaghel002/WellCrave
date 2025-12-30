@@ -55,7 +55,6 @@ const variantSchema = new mongoose.Schema(
     sku: {
       type: String,
       required: true,
-      unique: true,
     },
     barcode: String,
     stock: {
@@ -290,9 +289,8 @@ const productSchema = new mongoose.Schema(
   }
 );
 
-// Indexes
+// Indexes (removed duplicate slug index since it has unique: true)
 productSchema.index({ name: "text", description: "text", tags: "text" });
-productSchema.index({ slug: 1 });
 productSchema.index({ category: 1 });
 productSchema.index({ basePrice: 1 });
 productSchema.index({ "rating.average": -1 });

@@ -1,6 +1,5 @@
 // models/Order.js
 const mongoose = require("mongoose");
-const { v4: uuidv4 } = require("uuid");
 
 const orderItemSchema = new mongoose.Schema(
   {
@@ -64,7 +63,6 @@ const orderSchema = new mongoose.Schema(
     orderNumber: {
       type: String,
       unique: true,
-      required: true,
     },
     user: {
       type: mongoose.Schema.Types.ObjectId,
@@ -125,7 +123,6 @@ const orderSchema = new mongoose.Schema(
         ],
         default: "pending",
       },
-      // Razorpay specific fields
       razorpayOrderId: String,
       razorpayPaymentId: String,
       razorpaySignature: String,
@@ -178,8 +175,7 @@ const orderSchema = new mongoose.Schema(
   }
 );
 
-// Indexes
-orderSchema.index({ orderNumber: 1 });
+// Indexes (removed duplicate orderNumber index since it has unique: true)
 orderSchema.index({ user: 1 });
 orderSchema.index({ status: 1 });
 orderSchema.index({ createdAt: -1 });
@@ -207,24 +203,6 @@ orderSchema.methods.addStatusHistory = function (status, note, userId) {
     updatedBy: userId,
     timestamp: new Date(),
   });
-};
-
-// Method to calculate totals
-orderSchema.methods.calculateTotals = function () {
-  this.subtotal = this.items.reduce((total, item) => total + item.total, 0);
-
-  if (this.coupon && this.coupon.code) {
-    if (this.coupon.discountType === "percentage") {
-      this.discount = (this.subtotal * this.coupon.discount) / 100;
-    } else {
-      this.discount = Math.min(this.coupon.discount, this.subtotal);
-    }
-  }
-
-  const afterDiscount = this.subtotal - this.discount;
-  this.total = afterDiscount + this.shipping.cost + this.tax;
-
-  return this;
 };
 
 // Method to check if order can be cancelled
@@ -280,21 +258,6 @@ orderSchema.statics.getStatistics = async function (startDate, endDate) {
     }
   );
 };
-
-// Static method to get orders by payment status
-orderSchema.statics.getByPaymentStatus = function (status) {
-  return this.find({ "payment.status": status })
-    .populate("user", "firstName lastName email")
-    .sort({ createdAt: -1 });
-};
-
-// Virtual for formatted total (in INR)
-orderSchema.virtual("formattedTotal").get(function () {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-  }).format(this.total);
-});
 
 const Order = mongoose.model("Order", orderSchema);
 

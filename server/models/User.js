@@ -18,7 +18,7 @@ const addressSchema = new mongoose.Schema(
     city: { type: String, required: true },
     state: { type: String, required: true },
     zipCode: { type: String, required: true },
-    country: { type: String, required: true, default: "USA" },
+    country: { type: String, required: true, default: "India" },
     phone: String,
     isDefault: { type: Boolean, default: false },
   },
@@ -93,7 +93,7 @@ const userSchema = new mongoose.Schema(
       newsletter: { type: Boolean, default: true },
       notifications: { type: Boolean, default: true },
       language: { type: String, default: "en" },
-      currency: { type: String, default: "USD" },
+      currency: { type: String, default: "INR" },
     },
     lastLogin: Date,
     passwordChangedAt: Date,
@@ -123,8 +123,7 @@ userSchema.virtual("orders", {
   foreignField: "user",
 });
 
-// Index for better query performance
-userSchema.index({ email: 1 });
+// Index for better query performance (only define once - email already has unique: true)
 userSchema.index({ createdAt: -1 });
 
 // Pre-save middleware to hash password

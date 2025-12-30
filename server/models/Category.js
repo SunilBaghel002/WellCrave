@@ -69,8 +69,7 @@ const categorySchema = new mongoose.Schema(
   }
 );
 
-// Indexes
-categorySchema.index({ slug: 1 });
+// Indexes (removed duplicate slug index since it has unique: true)
 categorySchema.index({ parent: 1 });
 categorySchema.index({ displayOrder: 1 });
 
