@@ -1,42 +1,38 @@
-// src/components/home/Categories.jsx
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FiArrowRight } from "react-icons/fi";
 import { categoriesAPI } from "../../api/products";
 
+// Use placeholders initially
 const defaultCategories = [
   {
     _id: "1",
     name: "Fruits",
     slug: "fruits",
-    icon: "🍎",
-    image: "https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=400",
-    productCount: 24,
+    image: "https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=500",
+    count: 24,
   },
   {
     _id: "2",
     name: "Vegetables",
     slug: "vegetables",
-    icon: "🥕",
-    image: "https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=400",
-    productCount: 18,
+    image: "https://images.unsplash.com/photo-1597362925123-77861d3fbac7?w=500",
+    count: 18,
   },
   {
     _id: "3",
-    name: "Herbs & Spices",
+    name: "Herbs",
     slug: "herbs-spices",
-    icon: "🌿",
-    image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400",
-    productCount: 32,
+    image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=500",
+    count: 32,
   },
   {
     _id: "4",
-    name: "Trail Mixes",
-    slug: "trail-mixes",
-    icon: "🥜",
-    image: "https://images.unsplash.com/photo-1604068549290-dea0e4a305ca?w=400",
-    productCount: 12,
+    name: "Powders",
+    slug: "powders",
+    image: "https://images.unsplash.com/photo-1615485500704-8e99099928b3?w=500",
+    count: 12,
   },
 ];
 
@@ -47,11 +43,9 @@ const Categories = () => {
     const fetchCategories = async () => {
       try {
         const { data } = await categoriesAPI.getFeatured();
-        if (data.data && data.data.length > 0) {
-          setCategories(data.data);
-        }
+        if (data.data && data.data.length > 0) setCategories(data.data);
       } catch (error) {
-        console.error("Error fetching categories:", error);
+        console.error("Error:", error);
       }
     };
     fetchCategories();
@@ -60,61 +54,58 @@ const Categories = () => {
   return (
     <section className="section bg-white">
       <div className="container-custom">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <motion.span
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-primary-600 font-medium"
+        <div className="flex flex-col md:flex-row justify-between items-end mb-12">
+          <div>
+            <span className="text-primary-600 font-semibold tracking-wider uppercase text-sm">
+              Collections
+            </span>
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-gray-900 mt-2">
+              Shop by Category
+            </h2>
+          </div>
+          <Link
+            to="/shop"
+            className="hidden md:flex items-center text-primary-600 font-medium hover:text-primary-700 transition-colors"
           >
-            Categories
-          </motion.span>
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="text-3xl md:text-4xl font-display font-bold text-gray-900 mt-2"
-          >
-            Shop by Category
-          </motion.h2>
+            View All Categories <FiArrowRight className="ml-2" />
+          </Link>
         </div>
 
-        {/* Categories Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-          {categories.map((category, index) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {categories.map((cat, idx) => (
             <motion.div
-              key={category._id}
-              initial={{ opacity: 0, y: 30 }}
+              key={cat._id}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
+              transition={{ delay: idx * 0.1 }}
             >
               <Link
-                to={`/shop/${category.slug}`}
-                className="group block relative rounded-2xl overflow-hidden aspect-square"
+                to={`/shop/${cat.slug}`}
+                className="group block relative h-[320px] rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300"
               >
-                <img
-                  src={category.image?.url || category.image}
-                  alt={category.name}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                />
+                <div className="absolute inset-0 bg-gray-200 img-zoom-container">
+                  <img
+                    src={cat.image?.url || cat.image}
+                    alt={cat.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                {/* Gradient Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
 
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-
-                <div className="absolute inset-0 flex flex-col justify-end p-6">
-                  <span className="text-3xl mb-2">{category.icon}</span>
-                  <h3 className="text-xl font-bold text-white mb-1">
-                    {category.name}
+                {/* Content */}
+                <div className="absolute bottom-0 left-0 p-6 w-full">
+                  <h3 className="text-2xl font-bold text-white mb-1 group-hover:-translate-y-1 transition-transform">
+                    {cat.name}
                   </h3>
-                  <p className="text-white/70 text-sm">
-                    {category.productCount} Products
-                  </p>
-
-                  <div className="mt-3 flex items-center text-white font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                    Shop Now
-                    <FiArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-300 text-sm">
+                      {cat.count || cat.productCount || 10}+ Items
+                    </span>
+                    <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transform translate-x-4 group-hover:translate-x-0 transition-all duration-300">
+                      <FiArrowRight />
+                    </div>
                   </div>
                 </div>
               </Link>

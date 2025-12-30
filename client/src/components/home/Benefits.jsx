@@ -1,4 +1,3 @@
-// src/components/home/Benefits.jsx
 import { motion } from "framer-motion";
 import {
   FiDroplet,
@@ -12,78 +11,78 @@ import {
 const benefits = [
   {
     icon: FiDroplet,
-    title: "97% Nutrients Retained",
-    description:
-      "Our freeze-drying process preserves almost all vitamins and minerals.",
+    title: "97% Nutrients",
+    desc: "Lock in vitamins with advanced freeze-drying.",
+    color: "bg-blue-50 text-blue-600",
   },
   {
     icon: FiClock,
     title: "25 Years Shelf Life",
-    description: "Properly stored, our products stay fresh for decades.",
+    desc: "Pantry staples that last for decades.",
+    color: "bg-orange-50 text-orange-600",
   },
   {
     icon: FiHeart,
     title: "100% Natural",
-    description: "No additives, preservatives, or artificial ingredients.",
+    desc: "Zero additives, just pure food.",
+    color: "bg-red-50 text-red-600",
   },
   {
     icon: FiTruck,
     title: "Free Shipping",
-    description: "Free delivery on all orders above ₹500.",
+    desc: "On all orders above ₹500.",
+    color: "bg-primary-50 text-primary-600",
   },
   {
     icon: FiAward,
-    title: "Premium Quality",
-    description: "Sourced from certified organic farms.",
+    title: "Certified Organic",
+    desc: "Sourced strictly from certified farms.",
+    color: "bg-yellow-50 text-yellow-600",
   },
   {
     icon: FiPackage,
-    title: "Eco-Friendly Packaging",
-    description: "Sustainable packaging that protects the environment.",
+    title: "Eco-Friendly",
+    desc: "Biodegradable packaging materials.",
+    color: "bg-green-50 text-green-600",
   },
 ];
 
 const Benefits = () => {
   return (
-    <section className="section bg-white">
+    <section className="section bg-secondary-50/50">
       <div className="container-custom">
-        <div className="text-center mb-12">
-          <motion.span
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-primary-600 font-medium"
-          >
-            Why Choose Us
-          </motion.span>
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="text-3xl md:text-4xl font-display font-bold text-gray-900 mt-2"
-          >
-            The DehydratedFoods Difference
-          </motion.h2>
+        <div className="text-center max-w-2xl mx-auto mb-16">
+          <span className="text-primary-600 font-bold uppercase tracking-wider text-sm">
+            Our Promise
+          </span>
+          <h2 className="text-3xl md:text-4xl font-display font-bold text-gray-900 mt-2">
+            Why We Are <span className="text-primary-600">Different</span>
+          </h2>
+          <p className="text-gray-500 mt-4">
+            We don't just dry food; we preserve the essence of nature using
+            state-of-the-art technology.
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {benefits.map((benefit, index) => (
+          {benefits.map((item, i) => (
             <motion.div
-              key={benefit.title}
-              initial={{ opacity: 0, y: 30 }}
+              key={i}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
-              className="group p-6 rounded-2xl bg-gray-50 hover:bg-primary-50 transition-colors"
+              transition={{ delay: i * 0.1 }}
+              className="bg-white p-8 rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-lg transition-all border border-gray-100"
             >
-              <div className="w-14 h-14 bg-primary-100 group-hover:bg-primary-200 rounded-xl flex items-center justify-center mb-4 transition-colors">
-                <benefit.icon className="text-primary-600" size={28} />
+              <div
+                className={`w-14 h-14 ${item.color} rounded-2xl flex items-center justify-center mb-6 text-xl`}
+              >
+                <item.icon size={26} />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                {benefit.title}
+              <h3 className="text-xl font-bold text-gray-900 mb-3">
+                {item.title}
               </h3>
-              <p className="text-gray-600">{benefit.description}</p>
+              <p className="text-gray-500 leading-relaxed">{item.desc}</p>
             </motion.div>
           ))}
         </div>

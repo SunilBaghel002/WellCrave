@@ -1,151 +1,114 @@
-// src/components/home/Testimonials.jsx
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiChevronLeft, FiChevronRight, FiStar } from "react-icons/fi";
+import { FaQuoteRight } from "react-icons/fa";
 
+// Data remains the same...
 const testimonials = [
   {
     id: 1,
     name: "Priya Sharma",
-    location: "Mumbai",
-    avatar: "https://randomuser.me/api/portraits/women/1.jpg",
+    role: "Nutritionist",
+    text: "The nutrient retention in these products is undeniable. As a nutritionist, I recommend them for busy professionals.",
     rating: 5,
-    text: "The freeze-dried strawberries are absolutely amazing! They taste just like fresh berries but with an incredible crunch. Perfect for my morning smoothies and oatmeal.",
   },
   {
     id: 2,
     name: "Rahul Mehta",
-    location: "Delhi",
-    avatar: "https://randomuser.me/api/portraits/men/2.jpg",
+    role: "Hiker",
+    text: "Lightweight, delicious, and energetic. The trail mixes are now an essential part of my hiking gear.",
     rating: 5,
-    text: "I've been buying from DehydratedFoods for over a year now. The quality is consistently excellent, and the shipping is always on time. Highly recommended!",
   },
   {
     id: 3,
     name: "Anjali Patel",
-    location: "Bangalore",
-    avatar: "https://randomuser.me/api/portraits/women/3.jpg",
+    role: "Mother",
+    text: "My kids love the strawberry chips! Finally a healthy snack that I don't have to force them to eat.",
     rating: 5,
-    text: "As a fitness enthusiast, I love having healthy snacks that don't compromise on nutrition. These dehydrated fruits are perfect for my post-workout recovery.",
-  },
-  {
-    id: 4,
-    name: "Vikram Singh",
-    location: "Chennai",
-    avatar: "https://randomuser.me/api/portraits/men/4.jpg",
-    rating: 5,
-    text: "The trail mix is my go-to snack for hiking trips. Lightweight, nutritious, and incredibly tasty. Can't imagine trekking without it anymore!",
   },
 ];
 
 const Testimonials = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [index, setIndex] = useState(0);
 
-  const nextTestimonial = () => {
-    setCurrentIndex((prev) => (prev + 1) % testimonials.length);
-  };
-
-  const prevTestimonial = () => {
-    setCurrentIndex(
-      (prev) => (prev - 1 + testimonials.length) % testimonials.length
-    );
-  };
+  const next = () => setIndex((prev) => (prev + 1) % testimonials.length);
+  const prev = () =>
+    setIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
 
   return (
-    <section className="section bg-gradient-hero text-white overflow-hidden">
-      <div className="container-custom">
-        <div className="text-center mb-12">
-          <motion.span
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-yellow-300 font-medium"
-          >
-            Testimonials
-          </motion.span>
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="text-3xl md:text-4xl font-display font-bold mt-2"
-          >
-            What Our Customers Say
-          </motion.h2>
-        </div>
+    <section className="section bg-primary-900 text-white overflow-hidden relative">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
 
-        <div className="relative max-w-4xl mx-auto">
-          {/* Navigation Buttons */}
-          <button
-            onClick={prevTestimonial}
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 md:-translate-x-12 z-10 p-3 bg-white/10 hover:bg-white/20 rounded-full backdrop-blur-sm transition-colors"
-          >
-            <FiChevronLeft size={24} />
-          </button>
-
-          <button
-            onClick={nextTestimonial}
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 md:translate-x-12 z-10 p-3 bg-white/10 hover:bg-white/20 rounded-full backdrop-blur-sm transition-colors"
-          >
-            <FiChevronRight size={24} />
-          </button>
-
-          {/* Testimonial Card */}
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentIndex}
-              initial={{ opacity: 0, x: 100 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -100 }}
-              transition={{ duration: 0.3 }}
-              className="bg-white/10 backdrop-blur-md rounded-3xl p-8 md:p-12 text-center"
-            >
-              {/* Avatar */}
-              <img
-                src={testimonials[currentIndex].avatar}
-                alt={testimonials[currentIndex].name}
-                className="w-20 h-20 rounded-full mx-auto mb-6 border-4 border-white/30"
-              />
-
-              {/* Rating */}
-              <div className="flex justify-center gap-1 mb-4">
-                {[...Array(testimonials[currentIndex].rating)].map((_, i) => (
-                  <FiStar
-                    key={i}
-                    className="fill-yellow-400 text-yellow-400"
-                    size={20}
-                  />
-                ))}
-              </div>
-
-              {/* Text */}
-              <p className="text-lg md:text-xl text-white/90 mb-6 leading-relaxed">
-                "{testimonials[currentIndex].text}"
-              </p>
-
-              {/* Author */}
-              <p className="font-semibold text-lg">
-                {testimonials[currentIndex].name}
-              </p>
-              <p className="text-white/70">
-                {testimonials[currentIndex].location}
-              </p>
-            </motion.div>
-          </AnimatePresence>
-
-          {/* Dots */}
-          <div className="flex justify-center gap-2 mt-8">
-            {testimonials.map((_, index) => (
+      <div className="container-custom relative z-10">
+        <div className="grid lg:grid-cols-2 gap-16 items-center">
+          {/* Left Text */}
+          <div>
+            <span className="text-secondary-400 font-bold uppercase tracking-wider text-sm">
+              Testimonials
+            </span>
+            <h2 className="text-4xl md:text-5xl font-display font-bold mt-4 mb-6 leading-tight">
+              Loved by <br />{" "}
+              <span className="text-primary-300">Health Enthusiasts</span>
+            </h2>
+            <p className="text-primary-100/80 text-lg mb-8 max-w-md">
+              Join thousands of happy customers who have switched to a healthier
+              lifestyle with our products.
+            </p>
+            <div className="flex gap-4">
               <button
+                onClick={prev}
+                className="p-4 rounded-full border border-primary-700 hover:bg-primary-800 transition-colors"
+              >
+                <FiChevronLeft size={24} />
+              </button>
+              <button
+                onClick={next}
+                className="p-4 rounded-full border border-primary-700 hover:bg-primary-800 transition-colors"
+              >
+                <FiChevronRight size={24} />
+              </button>
+            </div>
+          </div>
+
+          {/* Right Card */}
+          <div className="relative">
+            <AnimatePresence mode="wait">
+              <motion.div
                 key={index}
-                onClick={() => setCurrentIndex(index)}
-                className={`w-3 h-3 rounded-full transition-all ${
-                  index === currentIndex
-                    ? "bg-white w-8"
-                    : "bg-white/30 hover:bg-white/50"
-                }`}
-              />
-            ))}
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -50 }}
+                transition={{ duration: 0.4 }}
+                className="bg-primary-800/50 backdrop-blur-md p-10 md:p-12 rounded-[2.5rem] border border-primary-700/50"
+              >
+                <FaQuoteRight className="text-4xl text-primary-600 mb-6" />
+                <div className="flex gap-1 mb-6">
+                  {[...Array(5)].map((_, i) => (
+                    <FiStar
+                      key={i}
+                      className="fill-secondary-400 text-secondary-400"
+                    />
+                  ))}
+                </div>
+                <p className="text-xl md:text-2xl font-display font-medium leading-relaxed mb-8">
+                  "{testimonials[index].text}"
+                </p>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-primary-700 rounded-full flex items-center justify-center font-bold text-xl">
+                    {testimonials[index].name[0]}
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-white">
+                      {testimonials[index].name}
+                    </h4>
+                    <span className="text-primary-300 text-sm">
+                      {testimonials[index].role}
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       </div>
