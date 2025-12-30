@@ -1,6 +1,6 @@
 // src/components/layout/Navbar.jsx
-import { useState, useEffect } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import clsx from "clsx";
 import {
@@ -14,6 +14,7 @@ import {
   FiLogOut,
   FiPackage,
   FiSettings,
+  FiGrid,
 } from "react-icons/fi";
 import { useAuth } from "../../context/AuthContext";
 import { useCart } from "../../context/CartContext";
@@ -27,17 +28,66 @@ const Navbar = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
+  const userMenuRef = useRef(null);
+  const userButtonRef = useRef(null);
+
   const { isAuthenticated, user, logout } = useAuth();
   const { totalItems, setIsCartOpen } = useCart();
   const { itemCount: wishlistCount } = useWishlist();
   const navigate = useNavigate();
+  const location = useLocation();
 
+  // Close menus on route change
+  useEffect(() => {
+    setIsUserMenuOpen(false);
+    setIsMobileMenuOpen(false);
+    setIsSearchOpen(false);
+  }, [location.pathname]);
+
+  // Scroll handler
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Click outside handler for user menu
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        isUserMenuOpen &&
+        userMenuRef.current &&
+        !userMenuRef.current.contains(event.target) &&
+        userButtonRef.current &&
+        !userButtonRef.current.contains(event.target)
+      ) {
+        setIsUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [isUserMenuOpen]);
+
+  // Escape key handler
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === "Escape") {
+        setIsUserMenuOpen(false);
+        setIsSearchOpen(false);
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
   }, []);
 
   const handleSearch = (e) => {
@@ -47,6 +97,17 @@ const Navbar = () => {
       setSearchQuery("");
       setIsSearchOpen(false);
     }
+  };
+
+  const handleLogout = () => {
+    setIsUserMenuOpen(false);
+    logout();
+  };
+
+  const handleCartOpen = () => {
+    setIsUserMenuOpen(false);
+    setIsMobileMenuOpen(false);
+    setIsCartOpen(true);
   };
 
   const navLinks = [
@@ -60,7 +121,7 @@ const Navbar = () => {
     <header
       className={clsx(
         "fixed top-0 left-0 right-0 z-40 transition-all duration-300",
-        isScrolled ? "bg-white/95 backdrop-blur-md shadow-sm" : "bg-transparent"
+        isScrolled ? "bg-white/95 backdrop-blur-md shadow-sm" : "bg-white"
       )}
     >
       <div className="container-custom">
@@ -70,12 +131,7 @@ const Navbar = () => {
             <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center">
               <span className="text-white font-bold text-xl">D</span>
             </div>
-            <span
-              className={clsx(
-                "font-display font-bold text-xl hidden sm:block transition-colors",
-                isScrolled ? "text-gray-900" : "text-gray-900"
-              )}
-            >
+            <span className="font-bold text-xl hidden sm:block text-gray-900">
               DehydratedFoods
             </span>
           </Link>
@@ -101,11 +157,12 @@ const Navbar = () => {
           </nav>
 
           {/* Actions */}
-          <div className="flex items-center gap-2 md:gap-4">
+          <div className="flex items-center gap-2 md:gap-3">
             {/* Search */}
             <button
               onClick={() => setIsSearchOpen(true)}
               className="p-2 text-gray-600 hover:text-primary-600 hover:bg-gray-100 rounded-lg transition-colors"
+              aria-label="Search"
             >
               <FiSearch size={20} />
             </button>
@@ -115,6 +172,7 @@ const Navbar = () => {
               <Link
                 to="/wishlist"
                 className="relative p-2 text-gray-600 hover:text-primary-600 hover:bg-gray-100 rounded-lg transition-colors"
+                aria-label="Wishlist"
               >
                 <FiHeart size={20} />
                 {wishlistCount > 0 && (
@@ -127,8 +185,9 @@ const Navbar = () => {
 
             {/* Cart */}
             <button
-              onClick={() => setIsCartOpen(true)}
+              onClick={handleCartOpen}
               className="relative p-2 text-gray-600 hover:text-primary-600 hover:bg-gray-100 rounded-lg transition-colors"
+              aria-label="Cart"
             >
               <FiShoppingCart size={20} />
               {totalItems > 0 && (
@@ -142,8 +201,11 @@ const Navbar = () => {
             {isAuthenticated ? (
               <div className="relative">
                 <button
+                  ref={userButtonRef}
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                   className="flex items-center gap-2 p-2 text-gray-600 hover:text-primary-600 hover:bg-gray-100 rounded-lg transition-colors"
+                  aria-label="User menu"
+                  aria-expanded={isUserMenuOpen}
                 >
                   <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
                     <span className="text-primary-600 font-medium text-sm">
@@ -162,28 +224,28 @@ const Navbar = () => {
 
                 <AnimatePresence>
                   {isUserMenuOpen && (
-                    <>
-                      <div
-                        className="fixed inset-0 z-10"
-                        onClick={() => setIsUserMenuOpen(false)}
-                      />
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 10 }}
-                        className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-20"
-                      >
-                        <div className="px-4 py-3 border-b border-gray-100">
-                          <p className="font-medium text-gray-900">
-                            {user?.firstName} {user?.lastName}
-                          </p>
-                          <p className="text-sm text-gray-500">{user?.email}</p>
-                        </div>
+                    <motion.div
+                      ref={userMenuRef}
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 py-2 z-50"
+                    >
+                      <div className="px-4 py-3 border-b border-gray-100">
+                        <p className="font-medium text-gray-900">
+                          {user?.firstName} {user?.lastName}
+                        </p>
+                        <p className="text-sm text-gray-500 truncate">
+                          {user?.email}
+                        </p>
+                      </div>
 
+                      <div className="py-1">
                         <Link
                           to="/profile"
                           onClick={() => setIsUserMenuOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50"
+                          className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
                         >
                           <FiUser size={18} />
                           My Profile
@@ -191,7 +253,7 @@ const Navbar = () => {
                         <Link
                           to="/orders"
                           onClick={() => setIsUserMenuOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50"
+                          className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
                         >
                           <FiPackage size={18} />
                           My Orders
@@ -199,26 +261,39 @@ const Navbar = () => {
                         <Link
                           to="/wishlist"
                           onClick={() => setIsUserMenuOpen(false)}
-                          className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50"
+                          className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
                         >
                           <FiHeart size={18} />
                           Wishlist
                         </Link>
 
-                        <div className="border-t border-gray-100 mt-2 pt-2">
-                          <button
-                            onClick={() => {
-                              logout();
-                              setIsUserMenuOpen(false);
-                            }}
-                            className="flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 w-full"
-                          >
-                            <FiLogOut size={18} />
-                            Logout
-                          </button>
-                        </div>
-                      </motion.div>
-                    </>
+                        {/* Admin Link */}
+                        {(user?.role === "admin" ||
+                          user?.role === "moderator") && (
+                          <>
+                            <div className="border-t border-gray-100 my-1" />
+                            <Link
+                              to="/admin"
+                              onClick={() => setIsUserMenuOpen(false)}
+                              className="flex items-center gap-3 px-4 py-2 text-primary-600 hover:bg-primary-50 transition-colors"
+                            >
+                              <FiGrid size={18} />
+                              Admin Dashboard
+                            </Link>
+                          </>
+                        )}
+                      </div>
+
+                      <div className="border-t border-gray-100 pt-1">
+                        <button
+                          onClick={handleLogout}
+                          className="flex items-center gap-3 px-4 py-2 text-red-600 hover:bg-red-50 w-full transition-colors"
+                        >
+                          <FiLogOut size={18} />
+                          Logout
+                        </button>
+                      </div>
+                    </motion.div>
                   )}
                 </AnimatePresence>
               </div>
@@ -239,6 +314,7 @@ const Navbar = () => {
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="lg:hidden p-2 text-gray-600 hover:text-primary-600 hover:bg-gray-100 rounded-lg transition-colors"
+              aria-label="Menu"
             >
               {isMobileMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
             </button>
@@ -253,7 +329,7 @@ const Navbar = () => {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="lg:hidden bg-white border-t border-gray-100"
+            className="lg:hidden bg-white border-t border-gray-100 overflow-hidden"
           >
             <nav className="container-custom py-4 space-y-2">
               {navLinks.map((link) => (
@@ -308,7 +384,7 @@ const Navbar = () => {
               initial={{ opacity: 0, y: -50 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -50 }}
-              className="container-custom pt-20"
+              className="container-custom pt-24"
               onClick={(e) => e.stopPropagation()}
             >
               <form onSubmit={handleSearch} className="relative">
@@ -322,12 +398,12 @@ const Navbar = () => {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search for products..."
                   autoFocus
-                  className="w-full pl-16 pr-6 py-5 text-lg rounded-2xl bg-white shadow-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full pl-16 pr-16 py-5 text-lg rounded-2xl bg-white shadow-xl focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
                 <button
                   type="button"
                   onClick={() => setIsSearchOpen(false)}
-                  className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-6 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
                 >
                   <FiX size={24} />
                 </button>
