@@ -1,9 +1,10 @@
 // src/components/cart/CartSummary.jsx
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import clsx from "clsx";
 import { FiTag, FiX, FiTruck, FiShield } from "react-icons/fi";
 import { useCart } from "../../context/CartContext";
+import { useAuth } from "../../context/AuthContext";
 import { formatPrice } from "../../utils/helpers";
 import Button from "../common/Button";
 import Input from "../common/Input";
@@ -12,7 +13,9 @@ const CartSummary = ({ showCheckoutButton = true, className = "" }) => {
   const [couponCode, setCouponCode] = useState("");
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
 
-  const { cart, applyCoupon, removeCoupon, isLoading } = useCart();
+  const { cart, applyCoupon, removeCoupon, isLoading, setIsCartOpen } = useCart();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   const handleApplyCoupon = async (e) => {
     e.preventDefault();
@@ -26,6 +29,15 @@ const CartSummary = ({ showCheckoutButton = true, className = "" }) => {
 
   const handleRemoveCoupon = async () => {
     await removeCoupon();
+  };
+
+  const handleCheckout = () => {
+    setIsCartOpen(false);
+    if (!isAuthenticated) {
+      navigate("/login", { state: { from: { pathname: "/checkout" } } });
+    } else {
+      navigate("/checkout");
+    }
   };
 
   if (!cart) return null;
@@ -138,15 +150,14 @@ const CartSummary = ({ showCheckoutButton = true, className = "" }) => {
 
       {/* Checkout Button */}
       {showCheckoutButton && (
-        <Link to="/checkout">
-          <Button
-            fullWidth
-            size="lg"
-            disabled={isLoading || cart.items.length === 0}
-          >
-            Proceed to Checkout
-          </Button>
-        </Link>
+        <Button
+          onClick={handleCheckout}
+          fullWidth
+          size="lg"
+          disabled={isLoading || cart.items.length === 0}
+        >
+          Proceed to Checkout
+        </Button>
       )}
 
       {/* Trust Badges */}

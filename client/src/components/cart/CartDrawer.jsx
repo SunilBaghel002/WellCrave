@@ -1,6 +1,6 @@
 // src/components/cart/CartDrawer.jsx
 import { useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiX, FiShoppingBag, FiTrash2, FiMinus, FiPlus } from "react-icons/fi";
 import { useCart } from "../../context/CartContext";
@@ -14,6 +14,7 @@ const CartDrawer = ({ isOpen, onClose }) => {
     useCart();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Lock body scroll when open
   useEffect(() => {
@@ -39,6 +40,13 @@ const CartDrawer = ({ isOpen, onClose }) => {
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
   }, [isOpen, onClose]);
+
+  // Close cart drawer when navigating to checkout
+  useEffect(() => {
+    if (location.pathname === "/checkout" && isOpen) {
+      onClose();
+    }
+  }, [location.pathname, isOpen, onClose]);
 
   const handleCheckout = () => {
     onClose();
