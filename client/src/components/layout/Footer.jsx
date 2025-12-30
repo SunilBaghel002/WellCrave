@@ -1,5 +1,6 @@
 // src/components/layout/Footer.jsx
 import { Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FiFacebook,
   FiTwitter,
@@ -9,6 +10,44 @@ import {
   FiPhone,
   FiMapPin,
 } from "react-icons/fi";
+
+const BrandLogo = ({ size = "default", className = "" }) => {
+  const sizeClasses = {
+    small: "text-xl",
+    default: "text-2xl",
+    large: "text-3xl",
+  };
+
+  return (
+    <Link to="/" className={`inline-flex items-center gap-2 ${className}`}>
+      {/* Logo Icon */}
+      <motion.div
+        whileHover={{ rotate: [0, -10, 10, 0] }}
+        transition={{ duration: 0.5 }}
+        className="relative"
+      >
+        <div className="w-10 h-10 md:w-11 md:h-11 bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600 rounded-xl flex items-center justify-center shadow-lg shadow-teal-500/30">
+          <span className="text-white font-bold text-lg md:text-xl">W</span>
+        </div>
+        <motion.div
+          animate={{ scale: [1, 1.2, 1] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="absolute -top-1 -right-1 w-3 h-3 bg-amber-400 rounded-full border-2 border-white"
+        />
+      </motion.div>
+
+      {/* Brand Name */}
+      <div
+        className={`font-display font-bold ${sizeClasses[size]} hidden sm:block`}
+      >
+        <span className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 bg-clip-text text-transparent">
+          Well
+        </span>
+        <span className="text-gray-800">Crave</span>
+      </div>
+    </Link>
+  );
+};
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -83,14 +122,7 @@ const Footer = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8">
           {/* Brand Column */}
           <div className="col-span-2">
-            <Link to="/" className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-xl">D</span>
-              </div>
-              <span className="font-display font-bold text-xl text-white">
-                DehydratedFoods
-              </span>
-            </Link>
+            <BrandLogo />
             <p className="text-gray-400 mb-6 max-w-xs">
               Premium dehydrated foods crafted with care. Preserving nutrition,
               taste, and quality for your healthy lifestyle.
