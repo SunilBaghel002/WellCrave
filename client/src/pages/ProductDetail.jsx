@@ -31,7 +31,7 @@ import Button from "../components/common/Button";
 import QuantitySelector from "../components/common/QuantitySelector";
 import Loader from "../components/common/Loader";
 import ProductGrid from "../components/product/ProductGrid";
-import ProductReviews from "../components/product/ProductReviews";
+// import ProductReviews from "../components/product/ProductReviews";
 
 const ProductDetail = () => {
   const { slug } = useParams();

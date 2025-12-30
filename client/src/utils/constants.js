@@ -54,3 +54,13 @@ export const SORT_OPTIONS = [
   { value: "name", label: "Name: A to Z" },
   { value: "-name", label: "Name: Z to A" },
 ];
+
+
+export const PAYMENT_METHODS = {
+  cod: { label: "Cash on Delivery", icon: "💵" },
+  razorpay: { label: "Razorpay", icon: "💳" },
+  upi: { label: "UPI", icon: "📱" },
+  card: { label: "Card", icon: "💳" },
+  netbanking: { label: "Net Banking", icon: "🏦" },
+  wallet: { label: "Wallet", icon: "👛" },
+};
