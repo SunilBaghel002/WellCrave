@@ -491,3 +491,200 @@ input[type="number"] {
     background: white;
   }
 }
+
+/* Add these new styles to your src/index.css */
+
+/* Animated Blob Background */
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+.animation-delay-6000 {
+  animation-delay: 6s;
+}
+
+/* Glass Card Effect */
+.glass-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.glass-dark {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Radial Gradient */
+.bg-gradient-radial {
+  background: radial-gradient(circle, var(--tw-gradient-stops));
+}
+
+/* Enhanced Hero Gradient */
+.bg-gradient-hero-modern {
+  background: linear-gradient(
+    135deg,
+    #1e1b4b 0%,
+    #312e81 25%,
+    #4c1d95 50%,
+    #5b21b6 75%,
+    #6d28d9 100%
+  );
+}
+
+/* Improved Text Gradient */
+.text-gradient-gold {
+  background: linear-gradient(135deg, #fde68a, #fbbf24, #f59e0b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Shimmer Effect */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Floating Animation */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Glow Effects */
+.glow-primary {
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.3), 0 0 40px rgba(99, 102, 241, 0.2),
+    0 0 60px rgba(99, 102, 241, 0.1);
+}
+
+.glow-amber {
+  box-shadow: 0 0 20px rgba(251, 191, 36, 0.3), 0 0 40px rgba(251, 191, 36, 0.2),
+    0 0 60px rgba(251, 191, 36, 0.1);
+}
+
+/* Card Hover Effects */
+.card-hover-lift {
+  transition: all 0.3s ease;
+}
+
+.card-hover-lift:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Gradient Border */
+.gradient-border {
+  position: relative;
+  background: white;
+  border-radius: 1rem;
+}
+
+.gradient-border::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  padding: 2px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, #6366f1, #14b8a6);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+/* Smooth Scroll Behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Selection Styling - Updated */
+::selection {
+  background-color: rgba(99, 102, 241, 0.2);
+  color: #4338ca;
+}
+
+/* Updated Focus Ring */
+.focus-ring:focus-visible {
+  outline: 2px solid #6366f1;
+  outline-offset: 2px;
+}
+
+/* Improved Button States */
+.btn-glow:hover {
+  box-shadow: 0 0 30px rgba(99, 102, 241, 0.4);
+}
+
+/* Noise Texture Overlay */
+.noise-overlay::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  pointer-events: none;
+}
+
+/* Mesh Gradient Background */
+.mesh-gradient {
+  background-color: #1e1b4b;
+  background-image: radial-gradient(
+      at 40% 20%,
+      hsla(263, 70%, 46%, 0.8) 0px,
+      transparent 50%
+    ),
+    radial-gradient(at 80% 0%, hsla(328, 66%, 52%, 0.6) 0px, transparent 50%),
+    radial-gradient(at 0% 50%, hsla(267, 70%, 46%, 0.7) 0px, transparent 50%),
+    radial-gradient(at 80% 50%, hsla(174, 62%, 45%, 0.4) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, hsla(263, 70%, 46%, 0.5) 0px, transparent 50%),
+    radial-gradient(at 80% 100%, hsla(328, 66%, 52%, 0.4) 0px, transparent 50%);
+}

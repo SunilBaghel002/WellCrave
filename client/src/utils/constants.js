@@ -1,7 +1,7 @@
 // src/utils/constants.js
 export const CURRENCY = import.meta.env.VITE_CURRENCY || "INR";
 export const CURRENCY_SYMBOL = import.meta.env.VITE_CURRENCY_SYMBOL || "₹";
-export const APP_NAME = import.meta.env.VITE_APP_NAME || "DehydratedFoods";
+export const APP_NAME = import.meta.env.VITE_APP_NAME || "WellCrave";
 
 export const ORDER_STATUS = {
   pending: { label: "Pending", color: "yellow" },

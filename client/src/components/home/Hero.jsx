@@ -1,141 +1,247 @@
+// src/components/home/Hero.jsx
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { FiArrowRight, FiPlay, FiCheck } from "react-icons/fi";
+import { FiArrowRight, FiPlay, FiShoppingBag } from "react-icons/fi";
+import { HiSparkles } from "react-icons/hi2";
 import Button from "../common/Button";
-import { APP_NAME } from "../../utils/constants"; // Assuming APP_NAME is defined
 
 const Hero = () => {
   return (
-    <section className="relative min-h-screen pt-20 lg:pt-0 flex items-center overflow-hidden bg-[#fafafa]">
-      {/* Abstract Organic Shapes Background */}
-      <div className="absolute top-0 right-0 w-2/3 h-full bg-primary-50/50 rounded-bl-[100px] -z-10 hidden lg:block" />
-      <div className="absolute top-40 left-10 w-64 h-64 bg-secondary-100 rounded-full blur-3xl opacity-60 -z-10" />
-      <div className="absolute bottom-20 right-20 w-80 h-80 bg-primary-200 rounded-full blur-3xl opacity-40 -z-10" />
+    <section className="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0">
+        {/* Gradient Orbs */}
+        <div className="absolute top-0 -left-40 w-80 h-80 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob" />
+        <div className="absolute top-0 -right-40 w-80 h-80 bg-yellow-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000" />
+        <div className="absolute -bottom-40 left-20 w-80 h-80 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-4000" />
+        <div className="absolute bottom-0 right-40 w-80 h-80 bg-teal-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-6000" />
 
-      <div className="container-custom relative z-10">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Left Content */}
+        {/* Grid Pattern */}
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMtOS45NDEgMC0xOCA4LjA1OS0xOCAxOHM4LjA1OSAxOCAxOCAxOCAxOC04LjA1OSAxOC0xOC04LjA1OS0xOC0xOC0xOHptMCAzMmMtNy43MzIgMC0xNC02LjI2OC0xNC0xNHM2LjI2OC0xNCAxNC0xNCAxNCA2LjI2OCAxNCAxNC02LjI2OCAxNC0xNCAxNHoiIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iLjAyIi8+PC9nPjwvc3ZnPg==')] opacity-40" />
+      </div>
+
+      <div className="container-custom relative z-10 pt-20">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+          {/* Content */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            className="text-center lg:text-left"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-primary-100 rounded-full shadow-sm mb-6">
-              <span className="w-2 h-2 rounded-full bg-primary-500 animate-pulse"></span>
-              <span className="text-sm font-semibold text-primary-800 tracking-wide uppercase">
-                100% Organic & Preserved
+            {/* Badge */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 mb-8"
+            >
+              <HiSparkles className="text-yellow-400" />
+              <span className="text-sm font-medium text-white/90">
+                100% Natural & Organic Products
               </span>
-            </div>
+            </motion.div>
 
-            {/* Designed Website Name / Headline */}
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-display font-bold text-gray-900 leading-[1.1] mb-6">
-              Taste the{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-primary-400 italic pr-2">
-                Purest
+            {/* Heading */}
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.8 }}
+              className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-display font-bold text-white leading-[1.1] mb-6"
+            >
+              Premium{" "}
+              <span className="relative">
+                <span className="relative z-10 bg-gradient-to-r from-yellow-200 via-amber-300 to-orange-400 bg-clip-text text-transparent">
+                  Dehydrated
+                </span>
+                <motion.span
+                  initial={{ width: 0 }}
+                  animate={{ width: "100%" }}
+                  transition={{ delay: 0.8, duration: 0.6 }}
+                  className="absolute bottom-2 left-0 h-3 bg-gradient-to-r from-yellow-400/30 to-orange-400/30 -z-0 rounded-full"
+                />
               </span>
-              Form of Nature.
-            </h1>
+              <br />
+              Foods for You
+            </motion.h1>
 
-            <p className="text-lg md:text-xl text-gray-500 mb-8 max-w-lg leading-relaxed">
-              We freeze-dry premium produce at peak ripeness. No additives, just
-              <span className="font-bold text-gray-800"> {APP_NAME} </span>{" "}
-              quality.
-            </p>
+            {/* Description */}
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4, duration: 0.8 }}
+              className="text-lg lg:text-xl text-white/70 mb-10 max-w-xl mx-auto lg:mx-0"
+            >
+              Experience the future of nutrition with our freeze-dried
+              superfoods. Maximum nutrients, incredible taste, endless
+              possibilities.
+            </motion.p>
 
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-12">
+            {/* CTA Buttons */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.8 }}
+              className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
+            >
               <Link to="/shop">
                 <Button
                   size="lg"
-                  className="w-full sm:w-auto bg-primary-600 hover:bg-primary-700 text-white shadow-lg shadow-primary-500/30 rounded-full px-8"
+                  className="w-full sm:w-auto bg-gradient-to-r from-amber-400 to-orange-500 text-slate-900 hover:from-amber-300 hover:to-orange-400 font-semibold shadow-lg shadow-orange-500/25 border-0"
                 >
+                  <FiShoppingBag className="mr-2" size={20} />
                   Start Shopping
-                  <FiArrowRight className="ml-2" />
+                  <FiArrowRight className="ml-2" size={20} />
                 </Button>
               </Link>
+
               <Button
                 variant="outline"
                 size="lg"
-                className="w-full sm:w-auto border-gray-300 text-gray-700 hover:bg-white hover:text-primary-600 hover:border-primary-200 rounded-full px-8 bg-white/50 backdrop-blur-sm"
+                className="w-full sm:w-auto border-white/30 text-white hover:bg-white/10 backdrop-blur-sm"
               >
-                <FiPlay className="mr-2" />
-                How it Works
+                <FiPlay className="mr-2" size={20} />
+                Watch Story
               </Button>
-            </div>
+            </motion.div>
 
             {/* Trust Badges */}
-            <div className="flex items-center gap-6 text-sm font-medium text-gray-500">
-              <div className="flex items-center gap-2">
-                <div className="p-1 bg-primary-100 rounded-full text-primary-600">
-                  <FiCheck size={14} />
-                </div>
-                <span>Sugar Free</span>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.7, duration: 0.8 }}
+              className="mt-12 pt-8 border-t border-white/10"
+            >
+              <p className="text-white/50 text-sm mb-4">
+                Trusted by health enthusiasts
+              </p>
+              <div className="flex flex-wrap items-center gap-8 justify-center lg:justify-start">
+                {[
+                  { value: "25+", label: "Years Shelf Life" },
+                  { value: "97%", label: "Nutrients Retained" },
+                  { value: "50k+", label: "Happy Customers" },
+                  { value: "4.9★", label: "Average Rating" },
+                ].map((stat, index) => (
+                  <motion.div
+                    key={stat.label}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.8 + index * 0.1 }}
+                    className="text-center"
+                  >
+                    <p className="text-2xl lg:text-3xl font-bold text-white">
+                      {stat.value}
+                    </p>
+                    <p className="text-xs lg:text-sm text-white/50">
+                      {stat.label}
+                    </p>
+                  </motion.div>
+                ))}
               </div>
-              <div className="flex items-center gap-2">
-                <div className="p-1 bg-primary-100 rounded-full text-primary-600">
-                  <FiCheck size={14} />
-                </div>
-                <span>Vegan</span>
+            </motion.div>
+          </motion.div>
+
+          {/* Image Section */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1, delay: 0.3 }}
+            className="relative hidden lg:block"
+          >
+            {/* Main Image Container */}
+            <div className="relative">
+              {/* Glow Effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-3xl blur-3xl opacity-30 scale-110" />
+
+              {/* Main Image */}
+              <div className="relative rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
+                <img
+                  src="https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=800"
+                  alt="Premium dehydrated fruits and vegetables"
+                  className="w-full aspect-square object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent" />
               </div>
-              <div className="flex items-center gap-2">
-                <div className="p-1 bg-primary-100 rounded-full text-primary-600">
-                  <FiCheck size={14} />
+
+              {/* Floating Cards */}
+              <motion.div
+                animate={{ y: [0, -15, 0] }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+                className="absolute -left-8 top-1/4 glass-card p-4 rounded-2xl shadow-xl"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-400 to-pink-500 flex items-center justify-center text-2xl">
+                    🍓
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">Strawberries</p>
+                    <p className="text-sm text-gray-500">Freeze-Dried</p>
+                  </div>
                 </div>
-                <span>25 Year Shelf Life</span>
-              </div>
+              </motion.div>
+
+              <motion.div
+                animate={{ y: [0, 15, 0] }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 1,
+                }}
+                className="absolute -right-8 top-1/2 glass-card p-4 rounded-2xl shadow-xl"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center text-2xl">
+                    🥭
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">Mango</p>
+                    <p className="text-sm text-gray-500">100% Organic</p>
+                  </div>
+                </div>
+              </motion.div>
+
+              <motion.div
+                animate={{ y: [0, -10, 0] }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 2,
+                }}
+                className="absolute left-1/4 -bottom-6 glass-card p-4 rounded-2xl shadow-xl"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center text-2xl">
+                    🥬
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900">Spinach</p>
+                    <p className="text-sm text-gray-500">Super Greens</p>
+                  </div>
+                </div>
+              </motion.div>
             </div>
           </motion.div>
-
-          {/* Right Image Composition */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="relative hidden lg:block h-[600px]"
-          >
-            {/* Main Hero Image with Mask */}
-            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1576186726580-a816e8b12896?auto=format&fit=crop&q=80&w=1000')] bg-cover bg-center rounded-[3rem] shadow-2xl rotate-3 hover:rotate-0 transition-transform duration-700 ease-out" />
-
-            {/* Floating Glass Cards */}
-            <motion.div
-              animate={{ y: [0, -15, 0] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute -left-8 top-12 glass-panel p-5 rounded-2xl shadow-xl max-w-[200px]"
-            >
-              <div className="flex items-center gap-3 mb-2">
-                <span className="text-2xl">🍓</span>
-                <div>
-                  <p className="font-bold text-gray-900">Vitamin C</p>
-                  <p className="text-xs text-gray-500">Retained 98%</p>
-                </div>
-              </div>
-              <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
-                <div className="bg-primary-500 h-full w-[98%]"></div>
-              </div>
-            </motion.div>
-
-            <motion.div
-              animate={{ y: [0, 15, 0] }}
-              transition={{
-                duration: 5,
-                repeat: Infinity,
-                ease: "easeInOut",
-                delay: 1,
-              }}
-              className="absolute -right-6 bottom-24 bg-white p-4 rounded-2xl shadow-xl flex items-center gap-4"
-            >
-              <div className="bg-secondary-100 p-3 rounded-full text-secondary-600 font-bold text-xl">
-                4.9
-              </div>
-              <div>
-                <div className="flex text-secondary-400 text-sm">★★★★★</div>
-                <p className="text-xs text-gray-500 font-medium">
-                  From 2k+ Reviews
-                </p>
-              </div>
-            </motion.div>
-          </motion.div>
         </div>
+      </div>
+
+      {/* Bottom Wave */}
+      <div className="absolute bottom-0 left-0 right-0">
+        <svg
+          viewBox="0 0 1440 120"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M0 120L60 105C120 90 240 60 360 45C480 30 600 30 720 37.5C840 45 960 60 1080 67.5C1200 75 1320 75 1380 75L1440 75V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z"
+            fill="white"
+          />
+        </svg>
       </div>
     </section>
   );
