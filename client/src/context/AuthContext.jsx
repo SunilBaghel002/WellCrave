@@ -50,8 +50,9 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(true);
 
         toast.success(`Welcome back, ${userData.firstName}!`);
-        navigate("/");
-
+        
+        // Don't navigate here - let the Login component handle redirect
+        // This allows the cart context to process pending items first
         return { success: true };
       } catch (error) {
         const message = error.response?.data?.message || "Login failed";
@@ -59,7 +60,7 @@ export const AuthProvider = ({ children }) => {
         return { success: false, error: message };
       }
     },
-    [navigate]
+    []
   );
 
   const register = useCallback(

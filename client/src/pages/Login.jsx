@@ -1,6 +1,6 @@
 // src/pages/Login.jsx
-import { useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
@@ -17,8 +17,11 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
 
-  const from = location.state?.from?.pathname || "/";
+  // Get redirect URL from query params or location state
+  const redirectParam = searchParams.get("redirect");
+  const from = redirectParam || location.state?.from?.pathname || "/shop";
 
   const {
     register,
@@ -37,7 +40,10 @@ const Login = () => {
     setIsLoading(false);
 
     if (result.success) {
-      navigate(from, { replace: true });
+      // Small delay to ensure cart context processes pending items
+      setTimeout(() => {
+        navigate(from, { replace: true });
+      }, 100);
     }
   };
 

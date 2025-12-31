@@ -6,7 +6,6 @@ import {
   useEffect,
   useCallback,
 } from "react";
-import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { cartAPI } from "../api/cart";
 import { useAuth } from "./AuthContext";
@@ -18,7 +17,6 @@ export const CartProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const { isAuthenticated } = useAuth();
-  const navigate = useNavigate();
 
   // Fetch cart when authenticated
   useEffect(() => {
@@ -27,7 +25,7 @@ export const CartProvider = ({ children }) => {
     } else {
       setCart(null);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, fetchCart]);
 
   // Fetch cart
   const fetchCart = useCallback(async () => {
@@ -68,9 +66,18 @@ export const CartProvider = ({ children }) => {
     async (productId, variantId, quantity = 1) => {
       if (!isAuthenticated) {
         toast.error("Please login to add items to cart");
+        // Store product info for adding after login
+        const pendingCartItem = {
+          productId,
+          variantId,
+          quantity,
+          timestamp: Date.now(),
+        };
+        localStorage.setItem("pendingCartItem", JSON.stringify(pendingCartItem));
+        
         // Redirect to login page with return URL
         const currentPath = window.location.pathname + window.location.search;
-        navigate(`/login?redirect=${encodeURIComponent(currentPath)}`);
+        window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
         return { success: false, error: "Not authenticated" };
       }
 
@@ -204,6 +211,48 @@ export const CartProvider = ({ children }) => {
       setIsLoading(false);
     }
   }, [isAuthenticated]);
+
+  // Process pending cart item after authentication
+  const processPendingCartItem = useCallback(async () => {
+    const pendingItemStr = localStorage.getItem("pendingCartItem");
+    if (!pendingItemStr || !isAuthenticated) {
+      return;
+    }
+
+    try {
+      const pendingItem = JSON.parse(pendingItemStr);
+      // Check if item is not too old (within 1 hour)
+      if (Date.now() - pendingItem.timestamp > 3600000) {
+        localStorage.removeItem("pendingCartItem");
+        return;
+      }
+
+      // Add item to cart
+      const result = await addToCart(
+        pendingItem.productId,
+        pendingItem.variantId,
+        pendingItem.quantity
+      );
+
+      if (result.success) {
+        localStorage.removeItem("pendingCartItem");
+      }
+    } catch (error) {
+      console.error("Error processing pending cart item:", error);
+      localStorage.removeItem("pendingCartItem");
+    }
+  }, [isAuthenticated, addToCart]);
+
+  // Process pending cart item when cart is fetched
+  useEffect(() => {
+    if (isAuthenticated && cart !== null) {
+      // Small delay to ensure cart is fully loaded
+      const timer = setTimeout(() => {
+        processPendingCartItem();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthenticated, cart, processPendingCartItem]);
 
   // Calculate counts
   const itemCount = cart?.items?.length || 0;
