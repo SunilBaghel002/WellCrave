@@ -18,16 +18,7 @@ export const CartProvider = ({ children }) => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const { isAuthenticated } = useAuth();
 
-  // Fetch cart when authenticated
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchCart();
-    } else {
-      setCart(null);
-    }
-  }, [isAuthenticated, fetchCart]);
-
-  // Fetch cart
+  // Fetch cart - must be declared before useEffect that uses it
   const fetchCart = useCallback(async () => {
     if (!isAuthenticated) {
       setCart(null);
@@ -45,6 +36,15 @@ export const CartProvider = ({ children }) => {
       setIsLoading(false);
     }
   }, [isAuthenticated]);
+
+  // Fetch cart when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchCart();
+    } else {
+      setCart(null);
+    }
+  }, [isAuthenticated, fetchCart]);
 
   // Open cart drawer
   const openCart = useCallback(() => {
@@ -243,16 +243,20 @@ export const CartProvider = ({ children }) => {
     }
   }, [isAuthenticated, addToCart]);
 
-  // Process pending cart item when cart is fetched
+  // Process pending cart item when cart is fetched (only once per cart load)
   useEffect(() => {
-    if (isAuthenticated && cart !== null) {
-      // Small delay to ensure cart is fully loaded
-      const timer = setTimeout(() => {
-        processPendingCartItem();
-      }, 500);
-      return () => clearTimeout(timer);
+    if (isAuthenticated && cart !== null && !isLoading) {
+      // Check if there's a pending item before processing
+      const pendingItemStr = localStorage.getItem("pendingCartItem");
+      if (pendingItemStr) {
+        // Small delay to ensure cart is fully loaded
+        const timer = setTimeout(() => {
+          processPendingCartItem();
+        }, 500);
+        return () => clearTimeout(timer);
+      }
     }
-  }, [isAuthenticated, cart, processPendingCartItem]);
+  }, [isAuthenticated, cart, isLoading, processPendingCartItem]);
 
   // Calculate counts
   const itemCount = cart?.items?.length || 0;
