@@ -16,11 +16,13 @@ import Loader from "../components/common/Loader";
 import { ordersAPI } from "../api/orders";
 import { formatPrice, formatDate } from "../utils/helpers";
 import { useAuth } from "../context/AuthContext";
+import { useCart } from "../context/CartContext";
 
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const { fetchCart, closeCart } = useCart();
   const [order, setOrder] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -81,6 +83,20 @@ const PaymentSuccess = () => {
         } else if (orderNumber) {
           response = await ordersAPI.getByNumber(orderNumber);
           setOrder(response.data.data);
+        }
+
+        // Clear cart after successful payment
+        if (response?.data?.data && isAuthenticated) {
+          // Close cart drawer if open
+          closeCart();
+          // Fetch cart to sync with server (cart is already deleted on server)
+          // This will update the client-side cart state to empty
+          try {
+            await fetchCart();
+          } catch (cartError) {
+            // Cart might not exist anymore, which is expected after payment
+            console.log("Cart cleared after payment");
+          }
         }
 
         // If order not found, try to fetch user's recent orders

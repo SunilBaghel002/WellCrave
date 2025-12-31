@@ -6,6 +6,7 @@ import {
   useEffect,
   useCallback,
 } from "react";
+import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { cartAPI } from "../api/cart";
 import { useAuth } from "./AuthContext";
@@ -17,6 +18,7 @@ export const CartProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   // Fetch cart when authenticated
   useEffect(() => {
@@ -66,6 +68,9 @@ export const CartProvider = ({ children }) => {
     async (productId, variantId, quantity = 1) => {
       if (!isAuthenticated) {
         toast.error("Please login to add items to cart");
+        // Redirect to login page with return URL
+        const currentPath = window.location.pathname + window.location.search;
+        navigate(`/login?redirect=${encodeURIComponent(currentPath)}`);
         return { success: false, error: "Not authenticated" };
       }
 
