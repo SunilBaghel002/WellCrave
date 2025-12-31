@@ -246,7 +246,7 @@ const Navbar = () => {
         </AnimatePresence> */}
 
         <div className="container-custom">
-          <div className="flex items-center justify-between h-16 md:h-20 gap-2">
+          <div className="flex items-center justify-between h-14 sm:h-16 md:h-20 gap-1 sm:gap-2">
             {/* Logo */}
             <div className="flex-shrink-0">
               <BrandLogo />
@@ -290,7 +290,7 @@ const Navbar = () => {
             </nav>
 
             {/* Actions */}
-            <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
+            <div className="flex items-center gap-0.5 sm:gap-1 md:gap-2 flex-shrink-0">
               {/* Search Button */}
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -300,10 +300,10 @@ const Navbar = () => {
                   setIsUserMenuOpen(false);
                   setIsSearchOpen(true);
                 }}
-                className="relative p-2 md:p-2.5 text-gray-600 hover:text-teal-600 hover:bg-teal-50 rounded-xl transition-all duration-300"
+                className="relative p-1.5 sm:p-2 md:p-2.5 text-gray-600 hover:text-teal-600 hover:bg-teal-50 rounded-lg sm:rounded-xl transition-all duration-300"
                 aria-label="Search"
               >
-                <FiSearch size={18} className="md:w-5 md:h-5" />
+                <FiSearch className="w-4 h-4 sm:w-[18px] sm:h-[18px] md:w-5 md:h-5" />
               </motion.button>
 
               {/* Wishlist */}
@@ -314,17 +314,17 @@ const Navbar = () => {
                 >
                   <Link
                     to="/wishlist"
-                    className="relative p-2.5 text-gray-600 hover:text-teal-600 hover:bg-teal-50 rounded-xl transition-all duration-300 block"
+                    className="relative p-1.5 sm:p-2 md:p-2.5 text-gray-600 hover:text-teal-600 hover:bg-teal-50 rounded-lg sm:rounded-xl transition-all duration-300 block"
                     aria-label="Wishlist"
                   >
-                    <FiHeart size={20} />
+                    <FiHeart className="w-4 h-4 sm:w-5 sm:h-5" />
                     <AnimatePresence>
                       {wishlistCount > 0 && (
                         <motion.span
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
                           exit={{ scale: 0 }}
-                          className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-gradient-to-r from-rose-500 to-pink-500 text-white text-xs rounded-full flex items-center justify-center font-medium shadow-lg shadow-rose-500/30"
+                          className="absolute -top-0.5 -right-0.5 w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-r from-rose-500 to-pink-500 text-white text-[10px] sm:text-xs rounded-full flex items-center justify-center font-medium shadow-lg shadow-rose-500/30"
                         >
                           {wishlistCount}
                         </motion.span>
@@ -340,17 +340,17 @@ const Navbar = () => {
                 whileTap={{ scale: 0.95 }}
                 onClick={handleCartOpen}
                 type="button"
-                className="relative p-2.5 text-gray-600 hover:text-teal-600 hover:bg-teal-50 rounded-xl transition-all duration-300"
+                className="relative p-1.5 sm:p-2 md:p-2.5 text-gray-600 hover:text-teal-600 hover:bg-teal-50 rounded-lg sm:rounded-xl transition-all duration-300"
                 aria-label="Open cart"
               >
-                <FiShoppingCart size={20} />
+                <FiShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
                 <AnimatePresence>
                   {totalItems > 0 && (
                     <motion.span
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       exit={{ scale: 0 }}
-                      className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-gradient-to-r from-teal-500 to-cyan-500 text-white text-xs rounded-full flex items-center justify-center font-medium shadow-lg shadow-teal-500/30"
+                      className="absolute -top-0.5 -right-0.5 w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-r from-teal-500 to-cyan-500 text-white text-[10px] sm:text-xs rounded-full flex items-center justify-center font-medium shadow-lg shadow-teal-500/30"
                     >
                       {totalItems}
                     </motion.span>
@@ -370,22 +370,21 @@ const Navbar = () => {
                       setIsSearchOpen(false);
                       setIsUserMenuOpen(!isUserMenuOpen);
                     }}
-                    className="flex items-center gap-2 p-1.5 pl-1.5 pr-3 bg-gradient-to-r from-teal-50 to-cyan-50 hover:from-teal-100 hover:to-cyan-100 rounded-full transition-all duration-300 border border-teal-100"
+                    className="flex items-center gap-1.5 sm:gap-2 p-1 sm:p-1.5 pl-1 sm:pl-1.5 pr-2 sm:pr-3 bg-gradient-to-r from-teal-50 to-cyan-50 hover:from-teal-100 hover:to-cyan-100 rounded-full transition-all duration-300 border border-teal-100"
                     aria-label="User menu"
                     aria-expanded={isUserMenuOpen}
                   >
-                    <div className="w-8 h-8 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-full flex items-center justify-center shadow-md">
-                      <span className="text-white font-semibold text-sm">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-full flex items-center justify-center shadow-md">
+                      <span className="text-white font-semibold text-xs sm:text-sm">
                         {user?.firstName?.charAt(0)}
                       </span>
                     </div>
-                    <span className="hidden lg:block text-sm font-medium text-gray-700">
+                    <span className="hidden lg:block text-xs sm:text-sm font-medium text-gray-700">
                       {user?.firstName}
                     </span>
                     <FiChevronDown
-                      size={14}
                       className={clsx(
-                        "text-gray-500 transition-transform duration-300 hidden lg:block",
+                        "w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-500 transition-transform duration-300 hidden lg:block",
                         isUserMenuOpen && "rotate-180"
                       )}
                     />
@@ -399,7 +398,7 @@ const Navbar = () => {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         transition={{ duration: 0.2, ease: "easeOut" }}
-                        className="absolute right-0 mt-3 w-64 bg-white rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 py-2 z-50 overflow-hidden"
+                        className="absolute right-0 mt-3 w-56 sm:w-64 bg-white rounded-xl sm:rounded-2xl shadow-xl shadow-gray-200/50 border border-gray-100 py-2 z-50 overflow-hidden"
                       >
                         {/* User Info Header */}
                         <div className="px-4 py-3 bg-gradient-to-r from-teal-50 to-cyan-50 mx-2 rounded-xl mb-2">
@@ -525,7 +524,7 @@ const Navbar = () => {
                   setIsUserMenuOpen(false);
                   setIsMobileMenuOpen((prev) => !prev);
                 }}
-                className="lg:hidden p-2 md:p-2.5 text-gray-600 hover:text-teal-600 hover:bg-teal-50 rounded-xl transition-all duration-300"
+                className="lg:hidden p-1.5 sm:p-2 md:p-2.5 text-gray-600 hover:text-teal-600 hover:bg-teal-50 rounded-lg sm:rounded-xl transition-all duration-300"
                 aria-label="Menu"
                 aria-expanded={isMobileMenuOpen}
               >
@@ -538,7 +537,7 @@ const Navbar = () => {
                       exit={{ rotate: 90, opacity: 0 }}
                       transition={{ duration: 0.2 }}
                     >
-                      <FiX size={24} />
+                      <FiX className="w-5 h-5 sm:w-6 sm:h-6" />
                     </motion.div>
                   ) : (
                     <motion.div
@@ -548,7 +547,7 @@ const Navbar = () => {
                       exit={{ rotate: -90, opacity: 0 }}
                       transition={{ duration: 0.2 }}
                     >
-                      <FiMenu size={24} />
+                      <FiMenu className="w-5 h-5 sm:w-6 sm:h-6" />
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -581,10 +580,10 @@ const Navbar = () => {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-white z-50 lg:hidden shadow-2xl overflow-hidden"
+              className="fixed top-0 right-0 bottom-0 w-[280px] sm:w-80 max-w-[90vw] sm:max-w-[85vw] bg-white z-50 lg:hidden shadow-2xl overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between p-4 border-b border-gray-100">
+              <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-100">
                 <BrandLogo size="small" />
                 <motion.button
                   whileTap={{ scale: 0.95 }}
@@ -592,15 +591,15 @@ const Navbar = () => {
                     setIsMobileMenuOpen(false);
                     setIsUserMenuOpen(false);
                   }}
-                  className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-xl"
+                  className="p-1.5 sm:p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg sm:rounded-xl"
                   aria-label="Close menu"
                 >
-                  <FiX size={24} />
+                  <FiX className="w-5 h-5 sm:w-6 sm:h-6" />
                 </motion.button>
               </div>
 
               <div className="flex flex-col h-[calc(100%-80px)] overflow-y-auto">
-                <nav className="p-4 space-y-1">
+                <nav className="p-3 sm:p-4 space-y-1">
                   {navLinks.map((link, index) => (
                     <motion.div
                       key={link.to}
@@ -617,23 +616,23 @@ const Navbar = () => {
                         }}
                         className={({ isActive }) =>
                           clsx(
-                            "flex items-center gap-3 px-4 py-3.5 rounded-xl font-medium transition-all",
+                            "flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3.5 rounded-lg sm:rounded-xl text-sm sm:text-base font-medium transition-all",
                             isActive
                               ? "bg-gradient-to-r from-teal-500 to-cyan-600 text-white shadow-md shadow-teal-500/25"
                               : "text-gray-700 hover:bg-gray-50"
                           )
                         }
                       >
-                        <link.icon size={20} />
+                        <link.icon className="w-4 h-4 sm:w-5 sm:h-5" />
                         {link.label}
                       </NavLink>
                     </motion.div>
                   ))}
                 </nav>
 
-                <div className="border-t border-gray-100 mx-4" />
+                <div className="border-t border-gray-100 mx-3 sm:mx-4" />
 
-                <div className="p-4 space-y-1">
+                <div className="p-3 sm:p-4 space-y-1">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -641,14 +640,14 @@ const Navbar = () => {
                       setIsUserMenuOpen(false);
                       handleCartOpen(e);
                     }}
-                    className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl text-gray-700 hover:bg-gray-50 transition-all"
+                    className="w-full flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3.5 rounded-lg sm:rounded-xl text-sm sm:text-base text-gray-700 hover:bg-gray-50 transition-all"
                   >
-                    <span className="flex items-center gap-3 font-medium">
-                      <FiShoppingCart size={20} />
+                    <span className="flex items-center gap-2 sm:gap-3 font-medium">
+                      <FiShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
                       Shopping Cart
                     </span>
                     {totalItems > 0 && (
-                      <span className="px-2.5 py-1 bg-teal-100 text-teal-700 text-sm font-semibold rounded-full">
+                      <span className="px-2 sm:px-2.5 py-0.5 sm:py-1 bg-teal-100 text-teal-700 text-xs sm:text-sm font-semibold rounded-full">
                         {totalItems}
                       </span>
                     )}
@@ -662,14 +661,14 @@ const Navbar = () => {
                         setIsMobileMenuOpen(false);
                         setIsUserMenuOpen(false);
                       }}
-                      className="w-full flex items-center justify-between px-4 py-3.5 rounded-xl text-gray-700 hover:bg-gray-50 transition-all"
+                      className="w-full flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3.5 rounded-lg sm:rounded-xl text-sm sm:text-base text-gray-700 hover:bg-gray-50 transition-all"
                     >
-                      <span className="flex items-center gap-3 font-medium">
-                        <FiHeart size={20} />
+                      <span className="flex items-center gap-2 sm:gap-3 font-medium">
+                        <FiHeart className="w-4 h-4 sm:w-5 sm:h-5" />
                         Wishlist
                       </span>
                       {wishlistCount > 0 && (
-                        <span className="px-2.5 py-1 bg-rose-100 text-rose-700 text-sm font-semibold rounded-full">
+                        <span className="px-2 sm:px-2.5 py-0.5 sm:py-1 bg-rose-100 text-rose-700 text-xs sm:text-sm font-semibold rounded-full">
                           {wishlistCount}
                         </span>
                       )}
@@ -679,20 +678,20 @@ const Navbar = () => {
 
                 <div className="flex-1" />
 
-                <div className="p-4 border-t border-gray-100">
+                <div className="p-3 sm:p-4 border-t border-gray-100">
                   {isAuthenticated ? (
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-teal-50 to-cyan-50 rounded-xl">
-                        <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-full flex items-center justify-center">
-                          <span className="text-white font-semibold">
+                    <div className="space-y-2 sm:space-y-3">
+                      <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-3 bg-gradient-to-r from-teal-50 to-cyan-50 rounded-lg sm:rounded-xl">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-full flex items-center justify-center flex-shrink-0">
+                          <span className="text-white font-semibold text-sm sm:text-base">
                             {user?.firstName?.charAt(0)}
                           </span>
                         </div>
-                        <div>
-                          <p className="font-semibold text-gray-900">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold text-gray-900 text-sm sm:text-base truncate">
                             {user?.firstName} {user?.lastName}
                           </p>
-                          <p className="text-sm text-gray-500">{user?.email}</p>
+                          <p className="text-xs sm:text-sm text-gray-500 truncate">{user?.email}</p>
                         </div>
                       </div>
 
@@ -704,9 +703,9 @@ const Navbar = () => {
                             setIsMobileMenuOpen(false);
                             setIsUserMenuOpen(false);
                           }}
-                          className="flex items-center justify-center gap-2 py-2.5 bg-gray-100 hover:bg-gray-200 rounded-xl text-gray-700 font-medium transition-colors"
+                          className="flex items-center justify-center gap-1.5 sm:gap-2 py-2 sm:py-2.5 bg-gray-100 hover:bg-gray-200 rounded-lg sm:rounded-xl text-gray-700 text-xs sm:text-sm font-medium transition-colors"
                         >
-                          <FiUser size={18} />
+                          <FiUser className="w-3.5 h-3.5 sm:w-[18px] sm:h-[18px]" />
                           Profile
                         </Link>
                         <Link
@@ -716,9 +715,9 @@ const Navbar = () => {
                             setIsMobileMenuOpen(false);
                             setIsUserMenuOpen(false);
                           }}
-                          className="flex items-center justify-center gap-2 py-2.5 bg-gray-100 hover:bg-gray-200 rounded-xl text-gray-700 font-medium transition-colors"
+                          className="flex items-center justify-center gap-1.5 sm:gap-2 py-2 sm:py-2.5 bg-gray-100 hover:bg-gray-200 rounded-lg sm:rounded-xl text-gray-700 text-xs sm:text-sm font-medium transition-colors"
                         >
-                          <FiPackage size={18} />
+                          <FiPackage className="w-3.5 h-3.5 sm:w-[18px] sm:h-[18px]" />
                           Orders
                         </Link>
                       </div>
@@ -730,14 +729,14 @@ const Navbar = () => {
                           setIsUserMenuOpen(false);
                           handleLogout();
                         }}
-                        className="w-full flex items-center justify-center gap-2 py-3 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl font-medium transition-colors"
+                        className="w-full flex items-center justify-center gap-2 py-2.5 sm:py-3 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg sm:rounded-xl text-sm sm:text-base font-medium transition-colors"
                       >
-                        <FiLogOut size={18} />
+                        <FiLogOut className="w-4 h-4 sm:w-[18px] sm:h-[18px]" />
                         Logout
                       </button>
                     </div>
                   ) : (
-                    <div className="space-y-3">
+                    <div className="space-y-2 sm:space-y-3">
                       <Link
                         to="/login"
                         onClick={(e) => {
@@ -750,7 +749,7 @@ const Navbar = () => {
                         <Button
                           variant="outline"
                           fullWidth
-                          className="border-teal-200 text-teal-600 hover:bg-teal-50"
+                          className="border-teal-200 text-teal-600 hover:bg-teal-50 text-sm sm:text-base"
                         >
                           Login
                         </Button>
@@ -766,7 +765,7 @@ const Navbar = () => {
                       >
                         <Button
                           fullWidth
-                          className="bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700"
+                          className="bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 text-sm sm:text-base"
                         >
                           Create Account
                         </Button>
@@ -800,13 +799,13 @@ const Navbar = () => {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -50, scale: 0.95 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="container-custom pt-20 md:pt-32"
+              className="container-custom pt-16 sm:pt-20 md:pt-32"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="max-w-2xl mx-auto">
+              <div className="max-w-2xl mx-auto px-4">
                 <form onSubmit={handleSearch} className="relative">
-                  <div className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400">
-                    <FiSearch size={24} />
+                  <div className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 text-gray-400">
+                    <FiSearch className="w-5 h-5 sm:w-6 sm:h-6" />
                   </div>
                   <input
                     type="text"
@@ -814,7 +813,7 @@ const Navbar = () => {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search for products, categories..."
                     autoFocus
-                    className="w-full pl-16 pr-16 py-5 md:py-6 text-lg md:text-xl rounded-2xl bg-white shadow-2xl focus:outline-none focus:ring-4 focus:ring-teal-500/20 border-0"
+                    className="w-full pl-10 sm:pl-16 pr-10 sm:pr-16 py-3 sm:py-5 md:py-6 text-base sm:text-lg md:text-xl rounded-xl sm:rounded-2xl bg-white shadow-2xl focus:outline-none focus:ring-2 sm:focus:ring-4 focus:ring-teal-500/20 border-0"
                   />
                   <button
                     type="button"
@@ -822,15 +821,15 @@ const Navbar = () => {
                       setIsSearchOpen(false);
                       setSearchQuery("");
                     }}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-gray-600 rounded-xl hover:bg-gray-100 transition-colors"
+                    className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 p-1.5 sm:p-2 text-gray-400 hover:text-gray-600 rounded-lg sm:rounded-xl hover:bg-gray-100 transition-colors"
                     aria-label="Close search"
                   >
-                    <FiX size={24} />
+                    <FiX className="w-5 h-5 sm:w-6 sm:h-6" />
                   </button>
                 </form>
 
-                <div className="mt-6 flex flex-wrap gap-2 justify-center">
-                  <span className="text-white/70 text-sm">Popular:</span>
+                <div className="mt-4 sm:mt-6 flex flex-wrap gap-2 justify-center px-4">
+                  <span className="text-white/70 text-xs sm:text-sm">Popular:</span>
                   {["Almonds", "Trail Mix", "Mango Slices", "Cashews"].map(
                     (term) => (
                       <button
@@ -842,7 +841,7 @@ const Navbar = () => {
                             navigate(`/shop?search=${encodeURIComponent(term)}`);
                           }, 100);
                         }}
-                        className="px-4 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-full text-sm transition-colors backdrop-blur-sm"
+                        className="px-3 sm:px-4 py-1 sm:py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-full text-xs sm:text-sm transition-colors backdrop-blur-sm"
                       >
                         {term}
                       </button>
