@@ -40,10 +40,15 @@ const Login = () => {
     setIsLoading(false);
 
     if (result.success) {
-      // Small delay to ensure cart context processes pending items
+      // Small delay to ensure cart context processes pending items and syncs guest cart
       setTimeout(() => {
-        navigate(from, { replace: true });
-      }, 100);
+        // If redirecting to checkout, navigate there after cart sync
+        if (from === "/checkout" || from.startsWith("/checkout")) {
+          navigate("/checkout", { replace: true });
+        } else {
+          navigate(from, { replace: true });
+        }
+      }, 1000);
     }
   };
 

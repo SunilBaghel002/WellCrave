@@ -12,16 +12,80 @@ import { useAuth } from "./AuthContext";
 
 const CartContext = createContext(null);
 
+// LocalStorage key for guest cart
+const GUEST_CART_KEY = "guestCart";
+
+// Helper functions for guest cart
+const getGuestCart = () => {
+  try {
+    const cartData = localStorage.getItem(GUEST_CART_KEY);
+    return cartData ? JSON.parse(cartData) : { items: [] };
+  } catch (error) {
+    console.error("Error reading guest cart:", error);
+    return { items: [] };
+  }
+};
+
+const saveGuestCart = (cart) => {
+  try {
+    localStorage.setItem(GUEST_CART_KEY, JSON.stringify(cart));
+  } catch (error) {
+    console.error("Error saving guest cart:", error);
+  }
+};
+
+const clearGuestCart = () => {
+  try {
+    localStorage.removeItem(GUEST_CART_KEY);
+  } catch (error) {
+    console.error("Error clearing guest cart:", error);
+  }
+};
+
+// Calculate cart totals for guest cart
+const calculateGuestCartTotals = (items) => {
+  const subtotal = items.reduce(
+    (sum, item) => sum + (item.price || 0) * (item.quantity || 1),
+    0
+  );
+  const discount = 0; // Guest carts don't support coupons
+  const shipping = subtotal >= 500 ? 0 : 50; // Free shipping above 500
+  const tax = (subtotal - discount) * 0.18; // 18% GST
+  const total = subtotal - discount + shipping + tax;
+
+  return {
+    subtotal,
+    discount,
+    shipping,
+    tax,
+    total,
+  };
+};
+
 export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const { isAuthenticated } = useAuth();
 
+  // Load guest cart from localStorage
+  const loadGuestCart = useCallback(() => {
+    const guestCart = getGuestCart();
+    if (guestCart.items && guestCart.items.length > 0) {
+      const totals = calculateGuestCartTotals(guestCart.items);
+      setCart({
+        ...guestCart,
+        ...totals,
+      });
+    } else {
+      setCart(null);
+    }
+  }, []);
+
   // Fetch cart - must be declared before useEffect that uses it
   const fetchCart = useCallback(async () => {
     if (!isAuthenticated) {
-      setCart(null);
+      loadGuestCart();
       return;
     }
 
@@ -35,16 +99,55 @@ export const CartProvider = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
+  }, [isAuthenticated, loadGuestCart]);
+
+  // Sync guest cart to server after login
+  const syncGuestCartToServer = useCallback(async () => {
+    if (!isAuthenticated) return false;
+
+    const guestCart = getGuestCart();
+    if (!guestCart.items || guestCart.items.length === 0) {
+      clearGuestCart();
+      return false;
+    }
+
+    try {
+      // Add each item from guest cart to server cart
+      for (const item of guestCart.items) {
+        try {
+          await cartAPI.addItem({
+            productId: item.productId,
+            variantId: item.variantId,
+            quantity: item.quantity,
+          });
+        } catch (error) {
+          console.error("Error syncing cart item:", error);
+          // Continue with other items even if one fails
+        }
+      }
+
+      // Clear guest cart after successful sync
+      clearGuestCart();
+      return true;
+    } catch (error) {
+      console.error("Error syncing guest cart:", error);
+      return false;
+    }
   }, [isAuthenticated]);
 
-  // Fetch cart when authenticated
+  // Fetch cart when authenticated status changes
   useEffect(() => {
     if (isAuthenticated) {
-      fetchCart();
+      // Sync guest cart first, then fetch server cart
+      const syncAndFetch = async () => {
+        await syncGuestCartToServer();
+        await fetchCart();
+      };
+      syncAndFetch();
     } else {
-      setCart(null);
+      loadGuestCart();
     }
-  }, [isAuthenticated, fetchCart]);
+  }, [isAuthenticated, fetchCart, loadGuestCart, syncGuestCartToServer]);
 
   // Open cart drawer
   const openCart = useCallback(() => {
@@ -63,24 +166,58 @@ export const CartProvider = ({ children }) => {
 
   // Add to cart
   const addToCart = useCallback(
-    async (productId, variantId, quantity = 1) => {
+    async (productId, variantId, quantity = 1, productData = null) => {
+      // Guest cart: add to localStorage
       if (!isAuthenticated) {
-        toast.error("Please login to add items to cart");
-        // Store product info for adding after login
-        const pendingCartItem = {
-          productId,
-          variantId,
-          quantity,
-          timestamp: Date.now(),
-        };
-        localStorage.setItem("pendingCartItem", JSON.stringify(pendingCartItem));
-        
-        // Redirect to login page with return URL
-        const currentPath = window.location.pathname + window.location.search;
-        window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`;
-        return { success: false, error: "Not authenticated" };
+        try {
+          const guestCart = getGuestCart();
+          const existingItemIndex = guestCart.items.findIndex(
+            (item) =>
+              (item.productId === productId || item.product === productId) &&
+              (item.variantId === variantId || item.variant === variantId)
+          );
+
+          if (existingItemIndex >= 0) {
+            guestCart.items[existingItemIndex].quantity += quantity;
+          } else {
+            // Add new item - need product data for guest cart
+            if (!productData) {
+              toast.error("Product data is required for guest cart");
+              return { success: false, error: "Product data missing" };
+            }
+
+            guestCart.items.push({
+              product: productId, // Store as 'product' to match server cart structure
+              variant: variantId, // Store as 'variant' to match server cart structure
+              productId, // Keep for sync purposes
+              variantId, // Keep for sync purposes
+              quantity,
+              name: productData.name || "Product",
+              price: productData.price || 0,
+              image: productData.image || "",
+              size: productData.size || "",
+              weight: productData.weight || 0,
+              weightUnit: productData.weightUnit || "g",
+            });
+          }
+
+          saveGuestCart(guestCart);
+          const totals = calculateGuestCartTotals(guestCart.items);
+          setCart({
+            ...guestCart,
+            ...totals,
+          });
+          toast.success("Added to cart!");
+          setIsCartOpen(true);
+          return { success: true };
+        } catch (error) {
+          console.error("Error adding to guest cart:", error);
+          toast.error("Failed to add to cart");
+          return { success: false, error: "Failed to add to cart" };
+        }
       }
 
+      // Authenticated: add to server cart
       try {
         setIsLoading(true);
         const { data } = await cartAPI.addItem({
@@ -107,8 +244,34 @@ export const CartProvider = ({ children }) => {
   // Update quantity
   const updateQuantity = useCallback(
     async (productId, variantId, quantity) => {
-      if (!isAuthenticated) return { success: false };
+      // Guest cart: update in localStorage
+      if (!isAuthenticated) {
+        try {
+          const guestCart = getGuestCart();
+          const itemIndex = guestCart.items.findIndex(
+            (item) =>
+              (item.productId === productId || item.product === productId) &&
+              (item.variantId === variantId || item.variant === variantId)
+          );
 
+          if (itemIndex >= 0) {
+            guestCart.items[itemIndex].quantity = quantity;
+            saveGuestCart(guestCart);
+            const totals = calculateGuestCartTotals(guestCart.items);
+            setCart({
+              ...guestCart,
+              ...totals,
+            });
+            return { success: true };
+          }
+          return { success: false };
+        } catch (error) {
+          console.error("Error updating guest cart:", error);
+          return { success: false, error: "Failed to update cart" };
+        }
+      }
+
+      // Authenticated: update on server
       try {
         setIsLoading(true);
         const { data } = await cartAPI.updateItem({
@@ -133,8 +296,37 @@ export const CartProvider = ({ children }) => {
   // Remove from cart
   const removeFromCart = useCallback(
     async (productId, variantId) => {
-      if (!isAuthenticated) return { success: false };
+      // Guest cart: remove from localStorage
+      if (!isAuthenticated) {
+        try {
+          const guestCart = getGuestCart();
+          guestCart.items = guestCart.items.filter(
+            (item) =>
+              !(
+                (item.productId === productId || item.product === productId) &&
+                (item.variantId === variantId || item.variant === variantId)
+              )
+          );
+          saveGuestCart(guestCart);
+          
+          if (guestCart.items.length > 0) {
+            const totals = calculateGuestCartTotals(guestCart.items);
+            setCart({
+              ...guestCart,
+              ...totals,
+            });
+          } else {
+            setCart(null);
+          }
+          toast.success("Removed from cart");
+          return { success: true };
+        } catch (error) {
+          console.error("Error removing from guest cart:", error);
+          return { success: false, error: "Failed to remove item" };
+        }
+      }
 
+      // Authenticated: remove from server
       try {
         setIsLoading(true);
         const { data } = await cartAPI.removeItem(productId, variantId);
@@ -155,8 +347,20 @@ export const CartProvider = ({ children }) => {
 
   // Clear cart
   const clearCart = useCallback(async () => {
-    if (!isAuthenticated) return { success: false };
+    // Guest cart: clear localStorage
+    if (!isAuthenticated) {
+      try {
+        clearGuestCart();
+        setCart(null);
+        toast.success("Cart cleared");
+        return { success: true };
+      } catch (error) {
+        console.error("Error clearing guest cart:", error);
+        return { success: false, error: "Failed to clear cart" };
+      }
+    }
 
+    // Authenticated: clear server cart
     try {
       setIsLoading(true);
       await cartAPI.clear();
@@ -212,51 +416,6 @@ export const CartProvider = ({ children }) => {
     }
   }, [isAuthenticated]);
 
-  // Process pending cart item after authentication
-  const processPendingCartItem = useCallback(async () => {
-    const pendingItemStr = localStorage.getItem("pendingCartItem");
-    if (!pendingItemStr || !isAuthenticated) {
-      return;
-    }
-
-    try {
-      const pendingItem = JSON.parse(pendingItemStr);
-      // Check if item is not too old (within 1 hour)
-      if (Date.now() - pendingItem.timestamp > 3600000) {
-        localStorage.removeItem("pendingCartItem");
-        return;
-      }
-
-      // Add item to cart
-      const result = await addToCart(
-        pendingItem.productId,
-        pendingItem.variantId,
-        pendingItem.quantity
-      );
-
-      if (result.success) {
-        localStorage.removeItem("pendingCartItem");
-      }
-    } catch (error) {
-      console.error("Error processing pending cart item:", error);
-      localStorage.removeItem("pendingCartItem");
-    }
-  }, [isAuthenticated, addToCart]);
-
-  // Process pending cart item when cart is fetched (only once per cart load)
-  useEffect(() => {
-    if (isAuthenticated && cart !== null && !isLoading) {
-      // Check if there's a pending item before processing
-      const pendingItemStr = localStorage.getItem("pendingCartItem");
-      if (pendingItemStr) {
-        // Small delay to ensure cart is fully loaded
-        const timer = setTimeout(() => {
-          processPendingCartItem();
-        }, 500);
-        return () => clearTimeout(timer);
-      }
-    }
-  }, [isAuthenticated, cart, isLoading, processPendingCartItem]);
 
   // Calculate counts
   const itemCount = cart?.items?.length || 0;

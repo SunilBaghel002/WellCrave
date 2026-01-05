@@ -34,7 +34,12 @@ const CartSummary = ({ showCheckoutButton = true, className = "" }) => {
   const handleCheckout = () => {
     setIsCartOpen(false);
     if (!isAuthenticated) {
-      navigate("/login", { state: { from: { pathname: "/checkout" } } });
+      // Cart is already saved in localStorage for guest users
+      // Redirect to login with checkout as the destination
+      navigate("/login", { 
+        state: { from: { pathname: "/checkout" } },
+        search: "?redirect=/checkout"
+      });
     } else {
       navigate("/checkout");
     }

@@ -15,7 +15,7 @@ import { APP_NAME } from "../utils/constants";
 
 const Checkout = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { cart, fetchCart } = useCart();
 
   const [step, setStep] = useState(1);
@@ -28,6 +28,15 @@ const Checkout = () => {
 
   useEffect(() => {
     const initialize = async () => {
+      // Redirect to login if not authenticated
+      if (!isAuthenticated) {
+        navigate("/login", { 
+          state: { from: { pathname: "/checkout" } },
+          search: "?redirect=/checkout"
+        });
+        return;
+      }
+
       try {
         await fetchCart();
         const { data } = await userAPI.getAddresses();
@@ -46,7 +55,7 @@ const Checkout = () => {
       }
     };
     initialize();
-  }, []);
+  }, [isAuthenticated, navigate, fetchCart]);
 
   const handleAddressSubmit = (address) => {
     setShippingAddress({
